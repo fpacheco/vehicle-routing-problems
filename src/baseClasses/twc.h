@@ -50,7 +50,7 @@
 #include "pg_types_vrp.h"
 #include "signalhandler.h"
 
-typedef std::map<UID,PhantomNode> PhantomNodes;   ///< Type definiton for PahntomNodes.
+typedef std::map<UID,PhantomNode> PhantomNodes;   ///< Type definiton for PahntomNodes UID is nid (internal node ID, NOT USER node Id).
 
 /*! \class TWC
  * \brief Class TWC (Time Window Compatibility) provides tools for working with Twpath objects.
@@ -138,6 +138,36 @@ private:
   };
 
 public:
+  // PhantomNode type node before and after definition
+  typedef enum {
+    pnBefore = -1,    ///< Before point in PhantomNode
+    pnAfter = 1,      ///< After point in PhantomNode
+  } PhantomNodeType;
+
+private:
+  /**
+   * @brief Get Twnode in twn
+   *
+   * This information is relevant in right side pickup trucks/containers
+   *
+   */
+  bool getTWPhantomNodeForNId(UID nid, PhantomNodeType type, Twnode &twn) const {
+    auto it = mPhantomNodes.find( nid );
+    if ( it!=mPhantomNodes.end() ) {
+      if ( type == pnBefore) {
+        twn = Twnode( mIPNId, mPNId, it->second.beforePNode().x(), it->second.beforePNode().y() );
+      } else if ( type == pnAfter) {
+        twn = Twnode( mIPNId, mPNId, it->second.afterPNode().x(), it->second.afterPNode().y() );
+      } else {
+        return false;
+      }
+      twn.set_type( Twnode::kPhantomNode );
+      return true;
+    }
+    return false;
+  }
+
+public:
   /**
    * @brief get phantom nodes for pickups sites
    *
@@ -161,10 +191,10 @@ private:
     double ma = 1.05;
     // Delete previous
     mPhantomNodes.clear();
-  #ifdef VRPMINTRACE
-    DLOG(INFO) << "mPhantonNodes cleared!";
-    DLOG(INFO) << "original have " << original.size() << " elements!";
-  #endif
+    #ifdef VRPMINTRACE
+      DLOG(INFO) << "mPhantonNodes cleared!";
+      DLOG(INFO) << "original have " << original.size() << " elements!";
+    #endif
 
     // Variables
     bool oldStateOsrm;
@@ -180,6 +210,7 @@ private:
 
     int pncount = 0;
     for (UINT i = 0; i < original.size(); i++) {
+        // Only picukp has phantom nodes
         if ( original[i].isPickup() ) {
         #ifdef VRPMINTRACE
             std::cout.precision(6);
@@ -212,12 +243,16 @@ private:
                 // After
                 alon = fnlon + ma * (pnlon - fnlon);
                 alat = fnlat + ma * (pnlat - fnlat);
+
+                /*
                 #ifdef VRPMINTRACE
                     std::cout << std::setprecision(8) << "PN: (" << pnlon << "," << pnlat << ")" << std::endl;
                     std::cout << "FN: (" << fnlon << "," << fnlat << ")" << std::endl;
                     std::cout << "Before: (" << blon << "," << blat << ")" << std::endl;
                     std::cout << "After: (" << alon << "," << alat << ")" << std::endl;
                 #endif
+                */
+
                 bool ret = original[i].isRightToSegment(
                     Node(fnlon,fnlat),
                     Node(pnlon,pnlat)
@@ -244,13 +279,13 @@ private:
                     std::cout << std::setprecision(8) << "PhantomNode" << std::endl;
                     std::cout << pn << std::endl;
                 #endif
-                // Add pn to de map
-                mPhantomNodes[ original[i].id() ] = pn;
+                // Add pn to de map. Map i with nid (internal node id) NOT id (user node id).
+                mPhantomNodes[ original[i].nid() ] = pn;
                 pncount++;
             }
             #ifdef VRPMINTRACE
                 if (one_way == 1) {
-                    DLOG(INFO) << original[i].id() << " is in one way street!";
+                    DLOG(INFO) << original[i].nid() << "("<< original[i].id() << ") is in one way street!";
                 }
             #endif
         }
@@ -262,8 +297,8 @@ private:
         DLOG(INFO) << "CONID" << "\t" << "COID" << "\t" << "COLON" << "\t" << "COLAT" << "\t" << "PNID" << "\t" << "PNLON" << "\t" << "PNLAT" << "\t"
                    << "BELON" << "\t" << "BELAT" << "\t" << "AFLON" << "\t" << "AFLAT";
         for (UINT i = 0; i < original.size(); i++) {
-            UID id = original[i].id();
-            auto it = mPhantomNodes.find( id );
+            UID nid = original[i].nid();
+            auto it = mPhantomNodes.find( nid );
             if ( it!=mPhantomNodes.end() ) {
                 DLOG(INFO) << std::setprecision(8) << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
                            << it->second.id() << "\t" << it->second.point().x() << "\t" << it->second.point().y() << "\t"
@@ -288,7 +323,7 @@ private:
   TwBucket<knode> original;                                 ///< The nodes. Set in loadAndProcess_distance and setNodes (Not used anywhere!)
   std::map< std::string, int> streetNames;                  ///< Map whit street name and id
   mutable std::vector< std::vector<double> > twcij;
-  mutable std::vector< std::vector<double> > travel_Time;   ///< Travel time matrix
+  mutable std::vector< std::vector<double> > travel_Time;                   ///< Travel time matrix travel_Time[nid][nid] = doublevalue;
   mutable std::vector< std::vector<double> > travel_time_onTrip;
   mutable std::vector< std::vector< std::deque< int64_t> > > nodes_onTrip;  ///< The nodes on trip
 
@@ -812,21 +847,33 @@ void fill_travel_time_onTrip_work(std::set<id_time, CompareSecond< id_time > >  
   return;
 }
 
-void process_pair_onPath(UINT i, UINT j) const{
+void process_pair_onPath(UINT i, UINT j) const {
   #ifdef VRPMINTRACE
       DLOG(INFO) << "started process_pair_onPath";
   #endif
+
   TwBucket <knode> trip;
   TwBucket <knode> nodesOnPath;
+
   if (travel_time_onTrip[i][j] == 0) {
+
     trip.clear();
     nodesOnPath.clear();
+
     trip.push_back(original[i]);
     getNodesOnPath(trip, original[j], original, nodesOnPath);
-    if (nodesOnPath.size() == 0 || nodesOnPath[0].nid() != original[i].nid()) nodesOnPath.push_front(original[i]);
-    if (nodesOnPath[nodesOnPath.size()-1].nid() != original[j].nid()) nodesOnPath.push_back(original[j]);
+
+    if (nodesOnPath.size() == 0 || nodesOnPath[0].nid() != original[i].nid()) {
+      nodesOnPath.push_front(original[i]);
+    }
+
+    if (nodesOnPath[nodesOnPath.size()-1].nid() != original[j].nid()) {
+      nodesOnPath.push_back(original[j]);
+    }
+
     fill_times(nodesOnPath);
   }
+
   #ifdef VRPMINTRACE
       DLOG(INFO) << "end process_pair_onPath";
   #endif
@@ -875,10 +922,23 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
 
   // To build the call
   std::deque< Twnode > call;
-  UID id;
-  for (unsigned int i = 0; i < nodesOnPath.size(); ++i) {
-      id = nodesOnPath[i].id();
-      auto it = mPhantomNodes.find( id );
+
+  call.push_back(nodesOnPath[0]);
+  Twnode twn;
+  if ( getTWPhantomNodeForNId(nodesOnPath[0].nid(), pnAfter, twn) ) {
+    call.push_back(twn);
+  }
+  for (unsigned int i = 1; i < nodesOnPath.size(); ++i) {
+    if ( getTWPhantomNodeForNId(nodesOnPath[i].nid(), pnBefore, twn) ) {
+      call.push_back(twn);
+    }
+    call.push_back(nodesOnPath[i]);
+  }
+
+  /*
+  for (unsigned int i = 1; i < nodesOnPath.size(); ++i) {
+      nid = nodesOnPath[i].nid();
+      auto it = mPhantomNodes.find( nid );
       if ( i==0 ) {
           call.push_back( nodesOnPath[i] );
           if ( it!=mPhantomNodes.end() ) {
@@ -901,6 +961,7 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
         //DLOG(INFO) << "Nodos en el path:" << i << " ID: " << nodesOnPath[i].id() << " x: " << nodesOnPath[i].x() << " y: " << nodesOnPath[i].y();
       #endif
   }
+  */
 
   // Add point to the call
   osrmi->addViaPoints(call);
@@ -937,18 +998,21 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   // fills the 2D table
   // Lo nuevo
   for (int i = 0; i < call.size()-1; ++i) {
-    for (int j = i + 1; j < call.size(); ++j) {
 
-      THROW_ON_SIGINT
+    if ( !call[i].isPhantomNode() ) {
+      UID from = call[i].nid();
 
-      if ( !call[i].isPhantomNode() ) {
-        UINT from = call[i].nid();
+      // Is valid only from i TO j NOT IN REVERSE!!!!!
+      for (int j = i + 1; j < call.size(); ++j) {
+
         if ( !call[j].isPhantomNode() ) {
-          UINT to = call[j].nid();
+          UID to = call[j].nid();
+
           #ifdef VRPMINTRACE
             DLOG(INFO) << "(i,j)=(" << i << "," << j << ")";
             DLOG(INFO) << "(from,to)=(" << from << "," << to << ")";
           #endif
+
           if (from != to) {
             if (travel_time_onTrip[from][to] == 0) {
               // Set
@@ -1010,6 +1074,7 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
             }
           }
         }
+
       }
     }
   }
@@ -1158,7 +1223,7 @@ void travel_Time4Insert(UINT i_nid, UINT j_nid, UINT k_nid, UINT l_nid, double t
   will be placed on streetNodes Bucket
 
 */
-void getNodesOnPath(
+void getNodesOnPath (
    const TwBucket<knode> &truck,
    const knode &dumpSite,
    const TwBucket<knode> &unassigned,
@@ -1197,35 +1262,18 @@ void getNodesOnPath(
   #ifdef VRPMAXTRACE
     DLOG(INFO) << "mPhantomNodes tiene " << mPhantomNodes.size() << " elementos";
   #endif
-  UID id;
-  for (unsigned int i = 0; i < truck.size(); ++i) {
-      id = truck[i].id();
-      auto it = mPhantomNodes.find( id );
-      if ( i==0 ) {
-          call.push_back(truck[i]);
-          if ( it!=mPhantomNodes.end() ) {
-            // Put mPNId for Node
-            Twnode n = Twnode(mIPNId,mPNId,it->second.afterPNode().x(),it->second.afterPNode().y());
-            n.set_type( Twnode::kPhantomNode );
-            call.push_back(n);
-          }
-      } else {
-          if ( it!=mPhantomNodes.end() ) {
-            // Put mPNId for Node
-            Twnode n = Twnode(mIPNId,mPNId,it->second.beforePNode().x(),it->second.beforePNode().y());
-            n.set_type( Twnode::kPhantomNode );
-            call.push_back(n);
-          }
-          call.push_back(truck[i]);
-      }
-      /*
-        // call.push_back(truck[i]);
-        #ifdef OSRMCLIENT
-          std::ostringstream strs;
-          strs << "Nodos en el truck:" << i << " ID: " << truck[i].id() << " x: " << truck[i].x() << " y: " << truck[i].y();
-          DLOG(INFO) << strs.str();
-        #endif
-      */
+
+  // Loop in truck. Add PhantomNode if necessary!
+  call.push_back(truck[0]);
+  Twnode twn;
+  if ( getTWPhantomNodeForNId(truck[0].nid(), pnAfter, twn) ) {
+    call.push_back(twn);
+  }
+  for (unsigned int i = 1; i < truck.size(); ++i) {
+    if ( getTWPhantomNodeForNId(truck[i].nid(), pnBefore, twn) ) {
+      call.push_back(twn);
+    }
+    call.push_back(truck[i]);
   }
 
   // Add dumpsite
@@ -1371,6 +1419,8 @@ void getNodesOnPath(
       double distToDump = streetNodes[i].distanceToSquared( dumpSite );
 
       if ( pos > 0 ) {
+        // No es necesario o si???
+        /*
         // check if segment of the street is 2 way and Node is in the right side
         oldStateOsrm = osrmi->getUse();
         osrmi->useOsrm(true);  //forcing osrm usage
@@ -1392,6 +1442,10 @@ void getNodesOnPath(
           std::pair< double, unsigned int > p( pos, i );
           seg.push_back( p );
         }
+        */
+        // found one on the segment so save it so we can order them
+        std::pair< double, unsigned int > p( pos, i );
+        seg.push_back( p );
       }
     }
 
@@ -1517,10 +1571,10 @@ bool setTravelingTimesOfRoute(
   osrmi->clear();
 
   // cycle 1:
-  UID id;
+  UID nid;
   for (unsigned int i = 0; i < tSize; ++i) {
-      id = truck[i].id();
-      auto it = mPhantomNodes.find( id );
+      nid = truck[i].nid();
+      auto it = mPhantomNodes.find( nid );
       if ( i==0 ) {
           call.push_back(truck[i]);
           if ( it!=mPhantomNodes.end() ) {
@@ -1546,8 +1600,8 @@ bool setTravelingTimesOfRoute(
   // cycle 2:
   call.push_back(dumpSite);
   for (int i = tSize - 1; i >= 0; --i) {
-      id = truck[i].id();
-      auto it = mPhantomNodes.find( id );
+      nid = truck[i].nid();
+      auto it = mPhantomNodes.find( nid );
       if ( i == (tSize - 1) ) {
           call.push_back(truck[i]);
           if ( it!=mPhantomNodes.end() ) {
@@ -1677,55 +1731,72 @@ bool setTravelingTimesInsertingOneNode(
 
   std::deque< Twnode > call;
   std::deque< double > times;
-  int id;
+
+  UID nid;
 
   // special case  0 n 1
   call.push_back(truck[0]);
-  // Phantom
-  id = truck[0].id();
-  auto it = mPhantomNodes.find( id );
-  if ( it!=mPhantomNodes.end() ) {
-    // Put mPNId for Node
-    Twnode n = Twnode(mIPNId,mPNId,it->second.afterPNode().x(),it->second.afterPNode().y());
-    n.set_type( Twnode::kPhantomNode );
-    call.push_back(n);
+  // Insert after if node has PhantomNode
+  Twnode twn;
+  if ( getTWPhantomNodeForNId(truck[0].nid(), pnAfter, twn) ) {
+    call.push_back(twn);
   }
 
-  // Got phantom
-  id = node.id();
-  it = mPhantomNodes.find( id );
-  if ( it!=mPhantomNodes.end() ) {
-    // Put mPNId for Node
-    Twnode n = Twnode(mIPNId,mPNId,it->second.beforePNode().x(),it->second.beforePNode().y());
-    n.set_type( Twnode::kPhantomNode );
-    call.push_back(n);
+  // Insert before if node has PhantomNode
+  if ( getTWPhantomNodeForNId(node.nid(), pnBefore, twn) ) {
+    call.push_back(twn);
   }
   call.push_back(node);
 
-  // Got phantom
-  id = truck[1].id();
-  it = mPhantomNodes.find( id );
-  if ( it!=mPhantomNodes.end() ) {
-    // Put mPNId for Node
-    Twnode n = Twnode(mIPNId,mPNId,it->second.beforePNode().x(),it->second.beforePNode().y());
-    n.set_type( Twnode::kPhantomNode );
-    call.push_back(n);
+  // Insert before if node has PhantomNode
+  if ( getTWPhantomNodeForNId(truck[1].nid(), pnBefore, twn) ) {
+    call.push_back(twn);
   }
   call.push_back(truck[1]);
+  // End special case
 
   // cycle:
   if (tSize > 2) {
     for (unsigned int i= 0; i < tSize - 3; ++i) {
+      // i
       call.push_back(truck[i]);
+      if ( getTWPhantomNodeForNId(truck[i].nid(), pnAfter, twn) ) {
+        call.push_back(twn);
+      }
+      // i +1
+      if ( getTWPhantomNodeForNId(truck[i+1].nid(), pnBefore, twn) ) {
+        call.push_back(twn);
+      }
       call.push_back(truck[i+1]);
+      // node
+      if ( getTWPhantomNodeForNId(node.nid(), pnBefore, twn) ) {
+        call.push_back(twn);
+      }
       call.push_back(node);
+      // i + 2
+      if ( getTWPhantomNodeForNId(truck[i+2].nid(), pnBefore, twn) ) {
+        call.push_back(twn);
+      }
       call.push_back(truck[i+2]);
     }
   }
+
   // special case 5 6 n   // 0 1 n D
   call.push_back(truck[tSize - 2]);
+  if ( getTWPhantomNodeForNId(truck[tSize - 2].nid(), pnAfter, twn) ) {
+    call.push_back(twn);
+  }
+
+  if ( getTWPhantomNodeForNId(truck[tSize - 1].nid(), pnBefore, twn) ) {
+    call.push_back(twn);
+  }
   call.push_back(truck[tSize - 1]);
+
+  if ( getTWPhantomNodeForNId(node.nid(), pnBefore, twn) ) {
+    call.push_back(twn);
+  }
   call.push_back(node);
+  // Dumpsite dont has phantom node
   call.push_back(dumpSite);
 
   // process osrm
@@ -1743,26 +1814,67 @@ bool setTravelingTimesInsertingOneNode(
 
 
   // lets have a peek
+  #ifdef VRPMINTRACE
+    DLOG(INFO) << "squential";
+    for (unsigned int i= 0; i < call.size(); ++i) {
+      DLOG(INFO) << call[i].id() << "," << times[i];
+    }
+  #endif
+
+
   #ifdef VRPMAXTRACE
-  DLOG(INFO) << "squential";
-  for (unsigned int i= 0; i < call.size(); ++i) {
-    DLOG(INFO) << call[i].id() << "," << times[i];
+    DLOG(INFO) << "pairs";
+  #endif
+
+  for (unsigned int i = 0; i < call.size(); ++i) {
+    if ( !call[i].isPhantomNode() ) {
+      UID from = call[i].nid();
+      for (unsigned int j = i+1; j < call.size(); ++j) {
+        if ( !call[j].isPhantomNode() ) {
+          UID to = call[j].nid();
+          if ( from!=to ) {
+            TravelTime( from, to );
+            travel_Time[from][to] = times[j]-times[i];
+          }
+        }
+      }
+    }
   }
+
+  #ifdef VRPMINTRACE
+    DLOG(INFO) << "call data and time!";
+    for ( int i = 0; i < call.size(); i++ ) {
+      DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << call[i].x() << "\t" << call[i].y() << "\t" << times[i] << "\t" ;
+    }
   #endif
 
-
-  #ifdef VRPMAXTRACE
-  DLOG(INFO) << "pairs";
+  #ifdef VRPMINTRACE
+    DLOG(INFO) << "Updated travel_Time";
+    int rcSize = original.size();
+    DLOG(INFO) << "Begin travel_Time matrix";
+    for ( int i = 0; i < rcSize; i++ ) {
+      std::stringstream row;
+      for ( int j = 0; j < rcSize; j++ ) {
+          row  << "\t" << travel_Time[i][j];
+      }
+      DLOG(INFO) << row.str();
+    }
+    DLOG(INFO) << "End travel_Time matrix";
   #endif
+
+  // Old code
+  /*
   for (unsigned int i = 0; i < call.size()-1; ++i) {
-    TravelTime(call[i].nid(), call[i+1].nid());
+    TravelTime( call[i].nid(), call[i+1].nid() );
     travel_Time[call[i].nid()][call[i+1].nid()] = times[i+1]-times[i];
     #ifdef VRPMAXTRACE
     DLOG(INFO) << call[i].id() << " -> "
                << call[i+1].id() << " = " << times[i+1] - times[i];
     #endif
   }
+  */
 
+/*
 #if 0
   // extract triplets and store in table
   #ifdef VRPMAXTRACE
@@ -1783,7 +1895,7 @@ bool setTravelingTimesInsertingOneNode(
 
   // extract quadraplets and store in table
   #ifdef VRPMAXTRACE
-  DLOG(INFO) << "quadruplets";
+    DLOG(INFO) << "quadruplets";
   #endif
   for (unsigned int i= 3; i < call.size()-1; i+=4) {
     // TTindex index(call[i].nid(), call[i+1].nid(), call[i+2].nid(), call[i+3].nid());
@@ -1797,6 +1909,7 @@ bool setTravelingTimesInsertingOneNode(
     #endif
   }
 #endif
+*/
 
   osrmi->useOsrm(oldStateOsrm);
 #endif  // with OSRMCLIENT
@@ -2126,14 +2239,14 @@ bool setTravelingTimesInsertingOneNode(
     // First node
     call.push_back(original[from]);
     // After node?
-    auto it = mPhantomNodes.find( original[from].id() );
+    auto it = mPhantomNodes.find( original[from].nid() );
     if ( it!=mPhantomNodes.end() ) {
       Twnode an = Twnode(mIPNId,mPNId,it->second.afterPNode().x(),it->second.afterPNode().y());
       an.set_type( Twnode::kPhantomNode );
       call.push_back(an);
     }
     // Before node?
-    it = mPhantomNodes.find( original[to].id() );
+    it = mPhantomNodes.find( original[to].nid() );
     if ( it!=mPhantomNodes.end() ) {
       Twnode bn = Twnode(mIPNId,mPNId,it->second.beforePNode().x(),it->second.beforePNode().y());
       bn.set_type( Twnode::kPhantomNode );
@@ -3576,6 +3689,7 @@ private:
    *
    * \param[in] ni From this node
    * \param[in] nj To this node
+   *
    * \return The TWC value traveling from node \b ni directly to \b nj
    */
   double twc_for_ij(const knode &ni, const knode &nj) const {
@@ -3588,8 +3702,7 @@ private:
     if ( TravelTime( i, j ) == VRP_MAX() ) return  VRP_MIN();
 
     if ( (nj.closes() - ajei(ni, nj)) > 0 ) {
-      result = std::min(ajli(ni, nj) , nj.closes())
-               - std::max(ajei(ni, nj) , nj.opens());
+      result = std::min(ajli(ni, nj) , nj.closes()) - std::max(ajei(ni, nj) , nj.opens());
     } else {
       result = VRP_MIN();
     }
