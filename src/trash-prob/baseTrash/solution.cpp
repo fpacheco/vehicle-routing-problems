@@ -149,6 +149,7 @@ void Solution::dumpSolutionForPg () const
 //Duplicated dumpSolutionForPg in order to change the output
 void Solution::dumpSolutionForPg () const
 {
+  // Integrate Emiliano work
   vehicle_path_t *results;
   UINT count;
   results = getSolutionForPg( count ) ;
@@ -499,10 +500,10 @@ Solution::Solution( const std::string &infile,
   UINT i = 0;
   while ( i < solid.size()) {
     // with both negatives we are done
-    if ( (solid[i] < 0) && soltype[i] < 0 ) break; 
+    if ( (solid[i] < 0) && soltype[i] < 0 ) break;
 
     // with type negative its the truck id
-    if ( soltype[i] < 0 ) { 
+    if ( soltype[i] < 0 ) {
         //get the truck from the truks:
         for ( UINT tr = 0; tr < trucks.size(); tr++ ) {
             if ( trucks[tr].getVid() == vid ) {
@@ -520,21 +521,21 @@ Solution::Solution( const std::string &infile,
       switch (soltype[i]) {
 
       case  Twnode::kStart:
-      	    solPath.push_back( truck.getStartingSite() );
+            solPath.push_back( truck.getStartingSite() );
             break;
 
       case  Twnode::kPickup:
             nid = pickups.getNidFromId( solid[i] );
-      	    solPath.push_back( datanodes[nid] );
-      	    stops.push_back( datanodes[nid] );
+            solPath.push_back( datanodes[nid] );
+            stops.push_back( datanodes[nid] );
             break;
 
       case Twnode::kDump:
-      	    solPath.push_back( truck.getDumpSite() );
+            solPath.push_back( truck.getDumpSite() );
             break;
 
       case  Twnode::kEnd:
-      	    solPath.push_back( truck.getEndingSite() );
+            solPath.push_back( truck.getEndingSite() );
 #ifdef VRPMINTRACE
             solPath.dumpid( "solPath" );
 #endif
@@ -546,7 +547,7 @@ Solution::Solution( const std::string &infile,
             break;
       }  // switch
       ++i;
-    }  // while     
+    }  // while
 
 
   }  //while
