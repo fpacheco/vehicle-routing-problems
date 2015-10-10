@@ -1420,7 +1420,6 @@ void getNodesOnPath (
 
       if ( pos > 0 ) {
         // No es necesario o si???
-        /*
         // check if segment of the street is 2 way and Node is in the right side
         oldStateOsrm = osrmi->getUse();
         osrmi->useOsrm(true);  //forcing osrm usage
@@ -1442,10 +1441,11 @@ void getNodesOnPath (
           std::pair< double, unsigned int > p( pos, i );
           seg.push_back( p );
         }
-        */
+        /*
         // found one on the segment so save it so we can order them
         std::pair< double, unsigned int > p( pos, i );
         seg.push_back( p );
+        */
       }
     }
 
@@ -1571,55 +1571,29 @@ bool setTravelingTimesOfRoute(
   osrmi->clear();
 
   // cycle 1:
-  UID nid;
-  for (unsigned int i = 0; i < tSize; ++i) {
-      nid = truck[i].nid();
-      auto it = mPhantomNodes.find( nid );
-      if ( i==0 ) {
-          call.push_back(truck[i]);
-          if ( it!=mPhantomNodes.end() ) {
-            // Put mPNId for Node
-            Twnode n = Twnode(mIPNId,mPNId,it->second.afterPNode().x(),it->second.afterPNode().y());
-            n.set_type( Twnode::kPhantomNode );
-            call.push_back(n);
-          }
-      } else {
-          if ( it!=mPhantomNodes.end() ) {
-            // Put mPNId for Node
-            Twnode n = Twnode(mIPNId,mPNId,it->second.beforePNode().x(),it->second.beforePNode().y());
-            n.set_type( Twnode::kPhantomNode );
-            call.push_back(n);
-          }
-          call.push_back(truck[i]);
-      }
-      // call.push_back(truck[i]);
+  call.push_back(truck[0]);
+  Twnode twn;
+  if ( getTWPhantomNodeForNId(truck[0].nid(), pnAfter, twn) ) {
+    call.push_back(twn);
   }
+  for (unsigned int i = 1; i < truck.size(); ++i) {
+    if ( getTWPhantomNodeForNId(truck[i].nid(), pnBefore, twn) ) {
+      call.push_back(twn);
+    }
+    call.push_back(truck[i]);
+  }
+  // Dump site dont have phantomnode
   call.push_back(dumpSite);
 
 #if 1
   // cycle 2:
+  // Dump site dont have phantomnode
   call.push_back(dumpSite);
   for (int i = tSize - 1; i >= 0; --i) {
-      nid = truck[i].nid();
-      auto it = mPhantomNodes.find( nid );
-      if ( i == (tSize - 1) ) {
-          call.push_back(truck[i]);
-          if ( it!=mPhantomNodes.end() ) {
-            // Put mPNId for Node
-            Twnode n = Twnode(mIPNId,mPNId,it->second.afterPNode().x(),it->second.afterPNode().y());
-            n.set_type( Twnode::kPhantomNode );
-            call.push_back(n);
-          }
-      } else {
-          if ( it!=mPhantomNodes.end() ) {
-            // Put mPNId for Node
-            Twnode n = Twnode(mIPNId,mPNId,it->second.beforePNode().x(),it->second.beforePNode().y());
-            n.set_type( Twnode::kPhantomNode );
-            call.push_back(n);
-          }
-          call.push_back(truck[i]);
-      }
-      // call.push_back(truck[i]);
+    if ( getTWPhantomNodeForNId(truck[i].nid(), pnBefore, twn) ) {
+      call.push_back(twn);
+    }
+    call.push_back(truck[i]);
   }
 #endif
 
@@ -1647,22 +1621,29 @@ bool setTravelingTimesOfRoute(
   #ifdef VRPMINTRACE
     DLOG(INFO) << "setting travel_Time (pairs). call.size = " << call.size();
   #endif
-  // Take only nodes not PhantomNodes
+  // Take only nodes not PhantomNodes. Set ONLY pairs times!
   for (int i = 0; i < call.size()-1; ++i) {
+    // Already commented!
     //TravelTime(call[i].nid(), call[i+1].nid());
     if ( !call[i].isPhantomNode() ) {
+      UID from = call[i].nid();
       for (int j = i + 1; j < call.size(); ++j) {
         #ifdef VRPMINTRACE
           DLOG(INFO) << "(i,j)=(" << i << "," << j << ") | time=" << times[j] - times[i];
         #endif
         if ( !call[j].isPhantomNode() ) {
-          #ifdef VRPMINTRACE
-            DLOG(INFO) << "call[" << i << "].nid() = " << call[i].nid() << "|" "call[" << j << "].nid() = " << call[j].nid();
-          #endif
-          travel_Time[call[i].nid()][call[j].nid()] = times[j]-times[i];
-          #ifdef VRPMINTRACE
-            DLOG(INFO) << "travel_Time from point " << call[i].id() << " to point " << call[j].id() << " is " << times[j] - times[i];
-          #endif
+          UID to = call[j].nid();
+          if ( from!=to ) {
+            #ifdef VRPMINTRACE
+              DLOG(INFO) << "call[" << i << "].nid() = " << call[i].nid() << "|" "call[" << j << "].nid() = " << call[j].nid();
+            #endif
+            travel_Time[from][to] = times[j]-times[i];
+            #ifdef VRPMINTRACE
+              DLOG(INFO) << "travel_Time from point " << call[i].id() << " to point " << call[j].id() << " is " << times[j] - times[i];
+            #endif
+          }
+          // Break the for j, next i!.
+          break;
         }
       }
     }
