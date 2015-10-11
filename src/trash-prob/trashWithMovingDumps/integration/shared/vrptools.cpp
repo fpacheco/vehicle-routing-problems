@@ -135,7 +135,7 @@ bool VRPTools::check()
         return ret;
     } else {
         return false;
-    }    
+    }
 }
 
 void VRPTools::solve()
@@ -213,6 +213,16 @@ void VRPTools::solve()
         best_sol.tau();
         DLOG(INFO) << "=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=";
     #endif
+
+        best_sol.dumpSolutionForPg();
+        /*
+        std::vector<int> solAsVector = best_sol.solutionAsVectorID();
+        for (int i=0; i< solAsVector.size(); i++) {
+            std::cout << solAsVector[i] << "\t";
+        }
+        std::cout << std::endl;
+        */
+
         // Limpio
         twc->cleanUp();
 

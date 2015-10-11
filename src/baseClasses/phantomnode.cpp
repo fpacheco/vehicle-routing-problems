@@ -19,6 +19,8 @@ PhantomNode::PhantomNode(const PhantomNode &other) {
     mReveNodeId = other.mReveNodeId;
     mForwWeight = other.mForwWeight;
     mReveWeight = other.mReveWeight;
+    mBeforePNode = other.mBeforePNode;
+    mAfterPNode = other.mAfterPNode;
     mNameId = other.mNameId;
 }
 

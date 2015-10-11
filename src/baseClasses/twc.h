@@ -3336,13 +3336,14 @@ private:
 #ifdef OSRMCLIENT
 private:
   void getAllHintsAndStreets() {
-#ifdef DOSTATS
-    Timer timer;
-#endif  //DOSTATS
+    #ifdef DOSTATS
+        Timer timer;
+    #endif  //DOSTATS
 
-#ifdef VRPMAXTRACE
-    DLOG(INFO) << "getAllHintsAndStreets\n";
-#endif
+    #ifdef VRPMAXTRACE
+        DLOG(INFO) << "getAllHintsAndStreets\n";
+    #endif
+
     std::deque<std::string> hints;
     std::deque<std::string> streets;
     std::map< std::string, int>::const_iterator street_ptr;
@@ -3356,7 +3357,9 @@ private:
       hints.clear();
       osrmi->clear();
 
-      for ( j = from; j < to ; j++ ) osrmi->addViaPoint(original[j]);
+      for ( j = from; j < to ; j++ ) {
+          osrmi->addViaPoint(original[j]);
+      }
 
       if (   osrmi->getOsrmViaroute()
           && osrmi->getOsrmHints(hints)

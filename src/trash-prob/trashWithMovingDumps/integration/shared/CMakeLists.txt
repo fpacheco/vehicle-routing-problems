@@ -23,11 +23,24 @@ set(VRPTOOLS_VERSION_MINOR 1)
 set(VRPTOOLS_VERSION_PATCH 0)
 set(VRPTOOLS_VERSION_STRING ${VRPTOOLS_VERSION_MAJOR}.${VRPTOOLS_VERSION_MINOR}.${VRPTOOLS_VERSION_PATCH})
 
-option(DOVRPLOG "Option description" ON)
-option(DOSTATS "Option description" ON)
+# Always
 option(OSRMCLIENT "Option description" ON)
-option(VRPMINTRACE "Option description" ON)
-option(VRPMAXTRACE "Option description" OFF)
+
+IF(CMAKE_BUILD_TYPE MATCHES Debug)
+  message(STATUS "debug mode")
+  option(DOVRPLOG "Option description" ON)
+  option(DOSTATS "Option description" ON)
+  option(VRPMINTRACE "Option description" ON)
+  option(VRPMAXTRACE "Option description" OFF)
+ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
+
+IF(CMAKE_BUILD_TYPE MATCHES Release)
+  message(STATUS "release mode")
+  option(DOVRPLOG "Option description" ON)
+  option(DOSTATS "Option description" OFF)
+  option(VRPMINTRACE "Option description" OFF)
+  option(VRPMAXTRACE "Option description" OFF)
+ENDIF(CMAKE_BUILD_TYPE MATCHES Release)
 
 if(DOVRPLOG)
   add_definitions(-DDOVRPLOG)
@@ -64,7 +77,11 @@ include_directories(
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CPP_FLAGS "-std=c++11 -Wall -fPIC")
 set(CMAKE_CPP_FLAGS_DEBUG "-std=c++11 -g")
+# TODO: Reparar
 set(CMAKE_CPP_FLAGS_RELEASE "-std=c++11 -O2")
+
+message(STATUS "CMAKE_CPP_FLAGS: " ${CMAKE_CPP_FLAGS})
+message(STATUS "CMAKE_CPP_FLAGS_RELEASE: " ${CMAKE_CPP_FLAGS_RELEASE})
 
 ### Find
 ## Boost
@@ -83,9 +100,9 @@ find_package(Threads REQUIRED)
 
 ## OSRM
 # Office
-set(OSRM_SOURCE_PATH "/disco_local/fpacheco/idm/right-side/osrm-backend")
+#set(OSRM_SOURCE_PATH "/disco_local/fpacheco/idm/right-side/osrm-backend")
 # Home
-#set(OSRM_SOURCE_PATH "/home/fpacheco/workspace/idm/right-side/osrm-backend")
+set(OSRM_SOURCE_PATH "/home/fpacheco/workspace/idm/right-side/osrm-backend")
 #set(OSRM_INCLUDE_DIRS ${OSRM_SOURCE_PATH}/build/libOSRM.a)
 #set(OSRM_SOURCE_PATH "/usr/local")
 set(OSRM_LIBRARIES ${OSRM_SOURCE_PATH}/build/libOSRM.a)

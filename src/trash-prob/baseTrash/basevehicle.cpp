@@ -125,9 +125,11 @@ bool  BaseVehicle::findPairNodesHasMoreNodesOnPath(
   const TwBucket<Trashnode> &assigned, const TwBucket<Trashnode> &unassigned,
   UINT &bestFrom, UINT &bestTo, TwBucket<Trashnode> &subPath) {
   assert(unassigned.size());
-    bool found = twc->findPairNodesHasMoreNodesOnPath(assigned, unassigned,
+  bool found = twc->findPairNodesHasMoreNodesOnPath(assigned, unassigned,
                        bestFrom, bestTo, subPath);
-  assert(found);
+
+  // TODO: RFPV - Why??
+  //assert(found);
   return found;
 }
 
@@ -135,9 +137,11 @@ bool  BaseVehicle::findNodeHasMoreNodesOnPath(
   const TwBucket<Trashnode> &assigned, const TwBucket<Trashnode> &unassigned,
   UINT &bestNode, UINT &bestPos, TwBucket<Trashnode> &subPath) {
   assert(unassigned.size());
-    bool found = twc->findNodeHasMoreNodesOnPath(path, assigned, unassigned,
+  bool found = twc->findNodeHasMoreNodesOnPath(path, assigned, unassigned,
                        dumpSite, bestNode, bestPos, subPath);
-  assert(found);
+
+  // TODO: RFPV - Why??
+  //assert(found);
   return found;
 }
 
@@ -183,11 +187,11 @@ bool BaseVehicle::e_setPath( const Bucket &sol )
     return false;
 
   Bucket tempSol = sol;
-  
+
   tempSol.pop_back();
   tempSol.pop_back();
   tempSol.pop_front();
-  
+
   for (UINT i = 0; i < tempSol.size(); i++) {
       push_back(tempSol[i]);
   }
@@ -247,12 +251,12 @@ bool BaseVehicle::findFastestNodeTo(bool first, Bucket &unassigned, POS &pos,
   flag = twc->findFastestNodeTo(first, path, unassigned, dumpSite,
          pos, bestNode, bestTime);
 
-#ifdef VRPMAXTRACE 
-DLOG(INFO) << "bestTime: " << bestTime 
+#ifdef VRPMAXTRACE
+DLOG(INFO) << "bestTime: " << bestTime
            << "\t after position: "  << (pos-1)
-           << "\t node:" << bestNode.id() 
+           << "\t node:" << bestNode.id()
            << "\t truck.size():" << path.size();
-#endif 
+#endif
   osrmi->useOsrm(oldStateOsrm);
   return flag;
 }
@@ -383,7 +387,7 @@ bool BaseVehicle::e_insert( Trashnode node, int at )
   return true;
 }
 
- void BaseVehicle::e_swap(int i,int j){  
+ void BaseVehicle::e_swap(int i,int j){
         if (i==j) return; //nothing to swap
         path.e_swap(i,j,maxcapacity);
         evalLast();
