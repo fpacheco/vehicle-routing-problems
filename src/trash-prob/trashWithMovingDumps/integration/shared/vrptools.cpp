@@ -215,6 +215,8 @@ void VRPTools::solve()
     #endif
 
         best_sol.dumpSolutionForPg();
+        std::vector<std::string> urls = best_sol.getOSRMUrl();
+
         /*
         std::vector<int> solAsVector = best_sol.solutionAsVectorID();
         for (int i=0; i< solAsVector.size(); i++) {

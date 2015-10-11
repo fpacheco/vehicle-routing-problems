@@ -146,6 +146,47 @@ void Solution::dumpSolutionForPg () const
   free(results);
 }*/
 
+std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
+{
+  vehicle_path_t *results;
+  UINT count;
+  results = getSolutionForPg( count ) ;
+  std::vector<std::string> urls;
+
+  std::cout.precision(6);
+  std::cout.setf( std::ios::fixed, std:: ios::floatfield );
+
+  Twnode twn;
+  bool hasPNode;
+
+  for ( UINT i = 0; i < fleet.size(); ++i ) {
+
+    if ( fleet[i].size() <= 1 ) {
+        continue;
+    }
+
+
+    std::stringstream ss;
+
+    ss << urlBase;
+    ss << "loc=" << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x();
+
+    for ( UINT j = 0; j < fleet[i].size(); ++j ) {
+      hasPNode = twc->getTWPhantomNodeForNId( fleet[i][j].nid(), twc->PhantomNodeType::pnBefore, twn);
+      if ( hasPNode ) {
+          ss << "&loc=" << twn.y() << "," << twn.x();
+      }
+      ss << "&loc=" << fleet[i][j].y() << "," << fleet[i][j].x();
+    }
+    ss << "&loc=" << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x();
+    ss << "&loc=" << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x();
+    std::cout << ss.str();
+    urls.push_back(ss.str());
+  }
+  free(results);
+}
+
+
 //Duplicated dumpSolutionForPg in order to change the output
 void Solution::dumpSolutionForPg () const
 {

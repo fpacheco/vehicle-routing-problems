@@ -74,6 +74,7 @@ public:
   int getFleetSize() const { return fleet.size(); }
   double getAverageRouteDurationLength();
   void dumpSolutionForPg () const;
+  std::vector<std::string> getOSRMUrl (std::string urlBase = "http://map.project-osrm.org/?") const;
 
   Vehicle operator[]( int pos ) const {
     return fleet[pos];
@@ -111,7 +112,7 @@ public:
   bool applyIntraSwMove( const Move &move ) ;
 
   int countPickups();
-    
+
   // Cost related
   int v_computeCosts();
   void dumpCostValues();
