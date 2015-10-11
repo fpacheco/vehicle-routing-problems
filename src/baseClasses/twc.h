@@ -147,7 +147,7 @@ public:
     pnAfter = 1,      ///< After point in PhantomNode
   } PhantomNodeType;
 
-private:
+public:
   /**
    * @brief Get after or before Twnode for a pickup that has PhantomNode
    *
