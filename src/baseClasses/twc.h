@@ -28,6 +28,10 @@
 // #include <limits>
 #include <iomanip>      // std::setprecision
 
+//TBB
+#include "tbb/tbb.h"
+
+
 #ifdef DOVRPLOG
 #include "logger.h"
 #endif
@@ -323,12 +327,20 @@ private:
 #endif //OSRMCLIENT
 
   typedef TwBucket<knode> Bucket;
-  TwBucket<knode> original;                                 ///< The nodes. Set in loadAndProcess_distance and setNodes (Not used anywhere!)
-  std::map< std::string, int> streetNames;                  ///< Map whit street name and id
+  ///< The nodes (all, pickups, dump, depots, etc). Set in loadAndProcess_distance and setNodes (Not used anywhere!)
+  TwBucket<knode> original;
+  ///< Map whit street name and id
+  std::map< std::string, int> streetNames;
   mutable std::vector< std::vector<double> > twcij;
-  mutable std::vector< std::vector<double> > travel_Time;                   ///< Travel time matrix travel_Time[nid][nid] = doublevalue;
-  mutable std::vector< std::vector<double> > travel_time_onTrip;
-  mutable std::vector< std::vector< std::deque< int64_t> > > nodes_onTrip;  ///< The nodes on trip
+  ///< Travel time matrix travel_Time[nid][nid] = doublevalue;
+  //mutable std::vector< std::vector<double> > travel_Time;
+  mutable tbb::concurrent_vector< tbb::concurrent_vector<double> > travel_Time;
+  ///< Travel time of the trip
+  //mutable std::vector< std::vector<double> > travel_time_onTrip;
+  mutable tbb::concurrent_vector< tbb::concurrent_vector<double> > travel_time_onTrip;
+  ///< The nodes on trip
+  mutable std::vector< std::vector< std::deque< int64_t> > > nodes_onTrip;
+  //mutable tbb::concurrent_vector<  tbb::concurrent_vector< tbb::concurrent_bounded_queue<int64_t> > > nodes_onTrip;
 
   typedef std::pair< std::pair <UINT, UINT>,  double> id_time;
   // typedef pair<UINT, double>::iterator i_id_time;
@@ -360,6 +372,7 @@ private:
     #ifdef VRPMINTRACE
       DLOG(INFO) << "started initializeTravelTime";
     #endif
+
     for (UINT i = 0; i < travel_Time.size(); ++i) {
       for (UINT j = 0; i < travel_Time.size(); ++i)
         if (i != j && travel_time_onTrip[i][j] == 0)
@@ -3285,9 +3298,28 @@ private:
     travel_Time.resize(siz);
     //process_order.resize(siz);
 
+    tbb::parallel_for(0, siz, 1, [=](int i) {
+      travel_Time[i].resize(siz);
+    });
+
+    /*
     for ( int i = 0; i < siz; i++ )
       travel_Time[i].resize(siz);
+    */
+    tbb::parallel_for(0, siz, 1, [=](int i) {
+        tbb::parallel_for(i, siz, 1, [=](int j) {
+            if ( i == j ) {
+              travel_Time[i][i] = 0;
+            } else {
+              travel_Time[i][j] = travel_Time[j][i] = -1;
+              #ifndef OSRMCLIENT
+                travel_Time[i][j] = travel_Time[j][i] = getTravelTime(i, j);
+              #endif
+            }
+        });
+    });
 
+    /*
     // travel_Time default value is 250m/min
     for ( int i = 0; i < siz; i++ )
       for ( int j = i; j < siz; j++ ) {
@@ -3300,6 +3332,7 @@ private:
           #endif
         }
       }
+      */
 
   #ifdef VRPMINTRACE
     DLOG(INFO) << "started prepareTravelTime";

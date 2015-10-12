@@ -132,10 +132,16 @@ endif(UNIX)
 find_package(rapidjson REQUIRED)
 ##
 
+find_package(TBB REQUIRED)
+if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
+  set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
+endif()
+
 ### Includes
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CURLPP_INCLUDE_DIRS})
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
+include_directories(${TBB_INCLUDE_DIR})
 ###
 
 # base trash
@@ -258,7 +264,15 @@ add_library (
 )
 #set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CPP)
 set_target_properties(${VRPTOOLS_LIBRARY_NAME} PROPERTIES VERSION ${VRPTOOLS_VERSION_STRING})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${Threads_LIBRARIES} ${OSRM_LIBRARIES} ${GLOG_LIBRARIES} ${CURLPP_LIBRARIES} )
+target_link_libraries(
+  ${PROJECT_NAME}
+  ${Boost_LIBRARIES}
+  ${Threads_LIBRARIES}
+  ${OSRM_LIBRARIES}
+  ${GLOG_LIBRARIES}
+  ${CURLPP_LIBRARIES}
+  ${TBB_LIBRARIES}
+)
 
 
 enable_testing()
