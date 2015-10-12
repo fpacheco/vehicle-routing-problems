@@ -174,8 +174,7 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
     //
     ssll << std::fixed << fleet[i].getStartingSite().x() << "," << fleet[i].getStartingSite().y() << std::endl;
 
-    // 1, 0 is starting
-    for ( UINT j = 1; j < fleet[i].size(); ++j ) {
+    for ( UINT j = 0; j < fleet[i].size(); ++j ) {
       hasPNode = twc->getTWPhantomNodeForNId( fleet[i][j].nid(), twc->PhantomNodeType::pnBefore, twn);
       if ( hasPNode ) {
           ss << std::fixed << "&loc=" << twn.y() << "," << twn.x();
