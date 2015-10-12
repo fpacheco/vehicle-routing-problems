@@ -262,7 +262,7 @@ void Solution::dumpSolutionForPg () const
 
       Twnode twn;
       bool hasPNode = twc->getTWPhantomNodeForNId( fleet[i][j].nid(), twc->PhantomNodeType::pnBefore, twn);
-
+/*
       if ( hasPNode ) {
           std::cout <<
                      seq <<
@@ -274,7 +274,7 @@ void Solution::dumpSolutionForPg () const
                     "\t" << fleet[i][j].departureTime() <<
                     "\t" << 0 <<
                     "\t" << 0 << std::endl;
-      }
+      }*/
       std::cout <<
                      seq <<
                     "\t" << fleet[i].getVid() <<
