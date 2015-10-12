@@ -177,9 +177,10 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
     }
     ss << "&loc=" << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x();
     ss << "&loc=" << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x();
-    std::cout << ss.str();
+    std::cout << ss.str() << std::endl;
     urls.push_back(ss.str());
   }
+  return urls;
 }
 
 
