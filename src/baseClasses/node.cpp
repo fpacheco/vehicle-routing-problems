@@ -269,7 +269,51 @@ double Node::distanceToSegment(double segmentX1, double segmentY1,
 
 bool Node::isRightToSegment(const Node &lineBegin, const Node &lineEnd) const
 {
-    return ((lineEnd.x()-lineBegin.x())*(this->y()-lineBegin.y())-(lineEnd.y()-lineBegin.y())*(this->x()-lineBegin.x())) < 0;
+  return ((lineEnd.x()-lineBegin.x())*(this->y()-lineBegin.y())-(lineEnd.y()-lineBegin.y())*(this->x()-lineBegin.x())) < 0;
+}
+
+double Node::deg_to_rad(const double degree) const
+{
+    return degree * (static_cast<float>(M_PI) / 180.f);
+}
+
+double Node::rad_to_deg(const double radian) const
+{
+    return radian * (180.f * static_cast<float>(M_1_PI));
+}
+
+double Node::bearing(const Node &other, bool reverse) const
+{
+
+      const double lon_diff = other.x() - this->x();
+      const double lon_delta = deg_to_rad(lon_diff);
+      const float lat1 = deg_to_rad( this->y() );
+      const float lat2 = deg_to_rad( other.y() );
+      const float y = std::sin(lon_delta) * std::cos(lat2);
+      const float x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
+      float result = rad_to_deg(std::atan2(y, x));
+
+      while (result < 0.f)
+      {
+          result += 360.f;
+      }
+
+      while (result >= 360.f)
+      {
+          result -= 360.f;
+      }
+
+      // From other to this node
+      if (reverse) {
+        if (result<=180) {
+          return (180+result);
+        } else {
+          return (result-180);
+        }
+      }
+
+      // From this to other
+      return result;
 }
 
 

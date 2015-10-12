@@ -110,7 +110,15 @@ class Node {
 
   bool isRightToSegment(const Node &lineBegin, const Node &lineEnd) const;
 
+  /** @name bearing */
+  ///@{
+  double deg_to_rad(const double degree) const;
+  double rad_to_deg(const double radian) const;
+  double bearing(const Node &other, bool reverse=false) const;
+  ///@}
+
   double positionAlongSegment(const Node &v, const Node &w, double tol) const;
+
 
   // dump
   void dump() const;
@@ -122,7 +130,7 @@ class Node {
   explicit Node(const std::string &line);
 
   //  ~Node() {}
- private:
+private:
   UID nid_;    ///< internal node number
   UID id_;     ///< user supplied node number
   double x_;   ///< x or longitude of the node's location
