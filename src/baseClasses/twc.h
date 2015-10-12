@@ -283,8 +283,8 @@ private:
                     pn.setAfterPNode( pa );
                 }
                 #ifdef VRPMINTRACE
-                    std::cout << std::setprecision(8) << "PhantomNode" << std::endl;
-                    std::cout << pn << std::endl;
+                    DLOG(INFO) << std::setprecision(8) << "PhantomNode";
+                    DLOG(INFO) << pn;
                 #endif
                 // Add pn to de map. Map i with nid (internal node id) NOT id (user node id).
                 mPhantomNodes[ original[i].nid() ] = pn;
