@@ -1187,14 +1187,10 @@ void getNodesOnPath (
   // buld call
   osrmi->setWantGeometry(true);
   // To call OSRM
-  std::deque< Twnode > call;
   // En calle de dos vias
   // Para el truck[0] debo imponer que vaya luego al afterPNode
   // Para el resto que pase por beforePNode
-  //
-  #ifdef VRPMAXTRACE
-    DLOG(INFO) << "mPhantomNodes tiene " << mPhantomNodes.size() << " elementos";
-  #endif
+  std::deque< Twnode > call;
 
   // Loop in truck. Add PhantomNode if necessary!
   call.push_back(truck[0]);
@@ -1219,17 +1215,17 @@ void getNodesOnPath (
     #ifdef VRPMINTRACE
         DLOG(INFO) << "getNodesOnPath getOsrmViaroute failed";
     #endif
-     osrmi->useOsrm(oldStateOsrm);
-     return;
+    osrmi->useOsrm(oldStateOsrm);
+    return;
   }
 
   std::deque<std::string> names;
   if (!osrmi->getOsrmNamesOnRoute(names) ) {
-#ifdef VRPMINTRACE
-     DLOG(INFO) << "getNodesOnPath getOsrmNamesOnRoute failed";
-#endif
-     osrmi->useOsrm(oldStateOsrm);
-     return;
+    #ifdef VRPMINTRACE
+         DLOG(INFO) << "getNodesOnPath getOsrmNamesOnRoute failed";
+    #endif
+    osrmi->useOsrm(oldStateOsrm);
+    return;
   }
 
 
@@ -1238,8 +1234,8 @@ void getNodesOnPath (
     #ifdef VRPMINTRACE
       DLOG(INFO) << "getNodesOnPath getOsrmGeometry failed";
     #endif
-      osrmi->useOsrm(oldStateOsrm);
-      return;
+    osrmi->useOsrm(oldStateOsrm);
+    return;
   }
 
 
@@ -1250,9 +1246,9 @@ void getNodesOnPath (
      streetMapPtr = streetNames.find(names[i]);
      if (streetMapPtr == streetNames.end()) continue;
      streetIDs.insert(streetMapPtr->second);
-#ifdef VRPMAXTRACE
-    DLOG(INFO) << "name:" << names[i] << "\tid:" << streetMapPtr->second;
-#endif
+     #ifdef VRPMINTRACE
+       DLOG(INFO) << "name:" << names[i] << "\tid:" << streetMapPtr->second;
+     #endif
   }
 
 
@@ -1278,7 +1274,7 @@ void getNodesOnPath (
   TwBucket<knode> streetNodes;
   for (unsigned int i = 0; i < unassigned.size(); ++i) {
     if (streetIDs.find(unassigned[i].streetId()) != streetIDs.end()) {
-        #ifdef VRPMAXTRACE
+        #ifdef VRPMINTRACE
             DLOG(INFO) << "Posible on route inserting: " << unassigned[i].id();
         #endif
         streetNodes.push_back(unassigned[i]);
