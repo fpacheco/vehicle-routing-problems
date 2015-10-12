@@ -172,26 +172,26 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
     ss << urlBase;
     ss << std::fixed << "loc=" << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x();
     //
-    ssll << std::fixed << fleet[i].getStartingSite().x() << "," << fleet[i].getStartingSite().y() << std::endl;
+    ssll << std::fixed << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x() << std::endl;
 
     for ( UINT j = 0; j < fleet[i].size(); ++j ) {
       hasPNode = twc->getTWPhantomNodeForNId( fleet[i][j].nid(), twc->PhantomNodeType::pnBefore, twn);
       if ( hasPNode ) {
           ss << std::fixed << "&loc=" << twn.y() << "," << twn.x();
           //
-          ssll << std::fixed << twn.x() << "," << twn.y() << std::endl;
+          ssll << std::fixed << twn.y() << "," << twn.x() << std::endl;
       }
       ss << std::fixed << "&loc=" << fleet[i][j].y() << "," << fleet[i][j].x();
       //
-      ssll << std::fixed << fleet[i][j].x() << "," << fleet[i][j].y() << std::endl;
+      ssll << std::fixed << fleet[i][j].y() << "," << fleet[i][j].x() << std::endl;
     }
     ss << "&loc=" << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x();
     //
-    ssll << std::fixed << fleet[i].getDumpSite().x() << "," << fleet[i].getDumpSite().y() << std::endl;
+    ssll << std::fixed << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x() << std::endl;
 
     ss << std::fixed << "&loc=" << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x();
     //
-    ssll << std::fixed << fleet[i].getEndingSite().x() << "," << fleet[i].getEndingSite().y() << std::endl;
+    ssll << std::fixed << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x() << std::endl;
 
     std::cout << ss.str() << std::endl;
     urls.push_back(ss.str());
