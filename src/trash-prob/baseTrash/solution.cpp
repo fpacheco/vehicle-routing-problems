@@ -148,9 +148,6 @@ void Solution::dumpSolutionForPg () const
 
 std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
 {
-  vehicle_path_t *results;
-  UINT count;
-  results = getSolutionForPg( count ) ;
   std::vector<std::string> urls;
 
   std::cout.precision(6);
@@ -183,7 +180,6 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
     std::cout << ss.str();
     urls.push_back(ss.str());
   }
-  free(results);
 }
 
 

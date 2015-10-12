@@ -194,8 +194,8 @@ private:
    */
   void setPhantomNodes() {
     // Multiplier for before and after
-    double mb = 0.95;
-    double ma = 1.05;
+    double mb = 0.70;
+    double ma = 1.30;
     // Delete previous
     mPhantomNodes.clear();
     #ifdef VRPMINTRACE
@@ -301,13 +301,13 @@ private:
 
     #ifdef VRPMINTRACE
         DLOG(INFO) << "Begin PhantomNodes for pickups sites";
-        DLOG(INFO) << "CONID" << "\t" << "COID" << "\t" << "COLON" << "\t" << "COLAT" << "\t" << "PNID" << "\t" << "PNLON" << "\t" << "PNLAT" << "\t"
+        DLOG(INFO) << "\t" << "CONID" << "\t" << "COID" << "\t" << "COLON" << "\t" << "COLAT" << "\t" << "PNID" << "\t" << "PNLON" << "\t" << "PNLAT" << "\t"
                    << "BELON" << "\t" << "BELAT" << "\t" << "AFLON" << "\t" << "AFLAT";
         for (UINT i = 0; i < original.size(); i++) {
             UID nid = original[i].nid();
             auto it = mPhantomNodes.find( nid );
             if ( it!=mPhantomNodes.end() ) {
-                DLOG(INFO) << std::setprecision(8) << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
+                DLOG(INFO) << std::setprecision(8) << "\t" << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
                            << it->second.id() << "\t" << it->second.point().x() << "\t" << it->second.point().y() << "\t"
                            << it->second.beforePNode().x() << "\t" << it->second.beforePNode().y() << "\t"
                            << it->second.afterPNode().x() << "\t" << it->second.afterPNode().y();
