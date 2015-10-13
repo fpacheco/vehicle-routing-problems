@@ -205,8 +205,10 @@ private:
 
     // Variables
     bool oldStateOsrm;
-    double pnlon, pnlat; // PhantomNode
-    double fnlon, fnlat; // Fisical Node
+    // PhantomNode
+    double pnlon, pnlat;
+    // Physical Node
+    double phyNLon, phyNLat;
     unsigned int one_way;
     unsigned int fw_id, rv_id, fw_wt, rv_wt, street_id;
 
@@ -232,7 +234,9 @@ private:
                 // Two way street
                 PhantomNode pn = PhantomNode(pncount, pnlon, pnlat, fw_id, rv_id, fw_wt, rv_wt, street_id);
                 // Get nearest fisical OSRM node (edge intersection) of phantom
-                osrmi->getOsrmLocate(pnlon, pnlat, fnlon, fnlat);
+                osrmi->getOsrmLocate(pnlon, pnlat, phyNLon, phyNLat);
+                // Set bearing!
+
                 // Add before and after to pn
                 double alon, alat, blon, blat;
                 // WARNING: longitude and latitude!!!!!!
@@ -245,23 +249,23 @@ private:
                 //         original[i]
                 //
                 // Before
-                blon = fnlon + mb * (pnlon - fnlon);
-                blat = fnlat + mb * (pnlat - fnlat);
+                blon = phyNLon + mb * (pnlon - phyNLon);
+                blat = phyNLat + mb * (pnlat - phyNLat);
                 // After
-                alon = fnlon + ma * (pnlon - fnlon);
-                alat = fnlat + ma * (pnlat - fnlat);
+                alon = phyNLon + ma * (pnlon - phyNLon);
+                alat = phyNLat + ma * (pnlat - phyNLat);
 
                 /*
                 #ifdef VRPMINTRACE
                     std::cout << std::setprecision(8) << "PN: (" << pnlon << "," << pnlat << ")" << std::endl;
-                    std::cout << "FN: (" << fnlon << "," << fnlat << ")" << std::endl;
+                    std::cout << "FN: (" << phyNLon << "," << phyNLat << ")" << std::endl;
                     std::cout << "Before: (" << blon << "," << blat << ")" << std::endl;
                     std::cout << "After: (" << alon << "," << alat << ")" << std::endl;
                 #endif
                 */
 
                 bool ret = original[i].isRightToSegment(
-                    Node(fnlon,fnlat),
+                    Node(phyNLon,phyNLat),
                     Node(pnlon,pnlat)
                 );
                 Point pb, pa;

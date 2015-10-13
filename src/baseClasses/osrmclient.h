@@ -56,14 +56,16 @@ class OsrmClient
 {
 
 private:
-
-  RouteParameters route_parameters;   ///< The OSRM request structure
-  int status;                         ///< Current state of the object
-  std::string
-  err_msg;                ///< An error message if an error is reported.
-  std::string httpContent;            ///< the json response document
-  static bool
-  connectionAvailable;           ///< once set to false, it doesnt try to make a connection
+  ///< The OSRM request structure
+  RouteParameters route_parameters;
+  ///< Current state of the object
+  int status;
+  ///< An error message if an error is reported.
+  std::string err_msg;
+  ///< the json response document
+  std::string httpContent;
+  ///< once set to false, it doesnt try to make a connection
+  static bool connectionAvailable;
   static OSRM  *routing_machine;
   static OsrmClient *p_osrm;
   OsrmClient();

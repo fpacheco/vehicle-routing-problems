@@ -55,22 +55,24 @@ OsrmClient::OsrmClient() {
   try {
     // No server paths needed (shared memory)
     ServerPaths server_paths;
+
     // Develop branch
     libosrm_config losrm_config;
     losrm_config.server_paths = server_paths;
     losrm_config.use_shared_memory = true;
     // Default
-    losrm_config.max_locations_distance_table = 100;
+    losrm_config.max_locations_distance_table = 500;
     // Default
-    losrm_config.max_locations_map_matching = -1;
+    losrm_config.max_locations_map_matching = 500;
     OsrmClient::routing_machine = new OSRM( losrm_config );
+
   } catch ( std::exception &e ) {
     status = -1;
     err_msg = std::string( "OsrmClient::OsrmClient caught exception: " ) + e.what();
-#ifdef DOSTATS
-    STATS->inc( err_msg );
-    STATS->addto( "OsrmClient::OsrmClient Cumulative time", timer.duration() );
-#endif
+    #ifdef DOSTATS
+      STATS->inc( err_msg );
+      STATS->addto( "OsrmClient::OsrmClient Cumulative time", timer.duration() );
+    #endif
     connectionAvailable = false;
     return;
   };

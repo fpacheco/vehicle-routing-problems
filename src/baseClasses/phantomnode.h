@@ -94,6 +94,11 @@ public:
     void setBearing(double bearing) { mBearing = bearing; }
     UID bearing () const { return mBearing; }
 
+    void setNetworkNNode (const Point &p) {
+        mNetworkNNode = Point( p.x(),p.y() );
+    }
+    Point networkNNode () const { return mNetworkNNode; }
+
     bool inSameStreet(const PhantomNode &other);
 
     PhantomNode& operator= ( const PhantomNode &other );
@@ -105,11 +110,12 @@ private:
     UID mReveNodeId;        ///< OSRM reverse node id
     UID mForwWeight;        ///< OSRM forward weight
     UID mReveWeight;        ///< OSRM reverse weight
-    std::string mName;       ///< OSRM street name
+    std::string mName;      ///< OSRM street name
     UID mNameId;            ///< OSRM street name id
     Point mBeforePNode;     ///< Longitude and latitude of point before phantom node
     Point mAfterPNode;      ///< Longitude and latitude of point after phantom node
-    double mBearing;        ///< Aproximate bearing for the edge
+    double mBearing;        ///< Aproximate bearing to et container asocciated with this phantom node
+    Point mNetworkNNode;    ///< Longitude and latitude of the nearest fisical node in the network
 };
 
 inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
