@@ -1621,6 +1621,7 @@ bool setTravelingTimesInsertingOneNode(
   std::vector< Twnode > call;
   std::vector< double > bearings;
   std::deque< double > times;
+  double bearing;
   // NO clear????
   osrmi->clear();
 
@@ -1648,7 +1649,7 @@ bool setTravelingTimesInsertingOneNode(
   }
   */
 
-  if ( getBearingForNId(truck[0], bearing) ) {
+  if ( getBearingForNId(truck[0].nid(), bearing) ) {
     bearings.push_back(bearing);
     call.push_back(truck[0]);
   } else {
@@ -1666,7 +1667,7 @@ bool setTravelingTimesInsertingOneNode(
 #endif
   }
 
-  if ( getBearingForNId(truck[1], bearing) ) {
+  if ( getBearingForNId(truck[1].nid(), bearing) ) {
     bearings.push_back(bearing);
     call.push_back(truck[1]);
   } else {
@@ -1678,7 +1679,7 @@ bool setTravelingTimesInsertingOneNode(
   // cycle:
   if (tSize > 2) {
     for (unsigned int i= 0; i < tSize - 3; ++i) {
-      if ( getBearingForNId(truck[i], bearing) ) {
+      if ( getBearingForNId(truck[i].nid(), bearing) ) {
         bearings.push_back(bearing);
         call.push_back(truck[i]);
       } else {
@@ -1686,7 +1687,7 @@ bool setTravelingTimesInsertingOneNode(
         DLOG(INFO) << "Error: Node " << truck[i].nid() << "(" << truck[i].id() << ") have no bearing!";
     #endif
       }
-      if ( getBearingForNId(truck[i+1], bearing) ) {
+      if ( getBearingForNId(truck[i+1].nid(), bearing) ) {
         bearings.push_back(bearing);
         call.push_back(truck[i+1]);
       } else {
@@ -1704,7 +1705,7 @@ bool setTravelingTimesInsertingOneNode(
     #endif
       }
 
-      if ( getBearingForNId(truck[i+2], bearing) ) {
+      if ( getBearingForNId(truck[i+2].nid(), bearing) ) {
         bearings.push_back(bearing);
         call.push_back(truck[i+2]);
       } else {
@@ -1716,7 +1717,7 @@ bool setTravelingTimesInsertingOneNode(
     }
   }
   // special case 5 6 n   // 0 1 n D
-  if ( getBearingForNId(truck[tSize - 2], bearing) ) {
+  if ( getBearingForNId(truck[tSize - 2].nid(), bearing) ) {
     bearings.push_back(bearing);
     call.push_back(truck[tSize - 2]);
   } else {
@@ -1725,7 +1726,7 @@ bool setTravelingTimesInsertingOneNode(
 #endif
   }
 
-  if ( getBearingForNId(truck[tSize - 1], bearing) ) {
+  if ( getBearingForNId(truck[tSize - 1].nid(), bearing) ) {
     bearings.push_back(bearing);
     call.push_back(truck[tSize - 1]);
   } else {
