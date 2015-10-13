@@ -49,9 +49,9 @@ inline std::ostream &operator<<(std::ostream &out, const Point &p)
 class PhantomNode
 {
 public:
-    PhantomNode(): mBearing(-1.0), mPoint( Point(0,0) ), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
+    PhantomNode(): mBearing(-1.0), mStreetName( std::string() ), mPoint( Point(0,0) ), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
     {}
-    PhantomNode( UID phantomNodeId ): mBearing(-1.0), mPoint( Point(0,0) ), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
+    PhantomNode( UID phantomNodeId ): mBearing(-1.0), mStreetName( std::string() ), mPoint( Point(0,0) ), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
     { mPhantomNodeId = phantomNodeId; }
     PhantomNode( UID phantomNodeId, double x, double y, UID fwNodeId, UID rvNodeId, UID fwWeight, UID rvWeight, UID nameId );
     PhantomNode( const PhantomNode &other );
@@ -76,12 +76,10 @@ public:
     void setReveWeight(UID rvWeight) { mReveWeight = rvWeight; }
     UID reveWeight () const { return mReveWeight; }
 
-    /*
     void setStreetName(std::string name) {
-      mStreetName.assign(name);
+      mStreetName = name;
     }
     std::string streetName () const { return mStreetName; }
-    */
 
     void setNameId(UID nameId) { mNameId = nameId; }
     UID nameId () const { return mNameId; }
@@ -115,7 +113,7 @@ private:
     UID mReveNodeId;        ///< OSRM reverse node id
     UID mForwWeight;        ///< OSRM forward weight
     UID mReveWeight;        ///< OSRM reverse weight
-    //std::string mStreetName; ///< OSRM street name
+    std::string mStreetName; ///< OSRM street name
     UID mNameId;            ///< OSRM street name id
     Point mBeforePNode;     ///< Longitude and latitude of point before phantom node
     Point mAfterPNode;      ///< Longitude and latitude of point after phantom node

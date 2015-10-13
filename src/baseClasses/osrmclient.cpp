@@ -213,6 +213,23 @@ void OsrmClient::addViaPoints(const std::deque<Twnode> &path )
     addViaPoint( *it );
 }
 
+void OsrmClient::addViaPoints(const std::vector<Twnode> &path, const std::vector<double> &bearings)
+{
+  if ( path.size()!=bearings.size() ) return;
+
+  if ( not connectionAvailable ) return;
+
+  if ( not use ) return;
+
+  for ( int i = 0; i <= path.size(); i++ ) {
+    addViaPoint(
+      path[i].y(),
+      path[i].x(),
+      bearings[i]
+    );
+  }
+}
+
 bool OsrmClient::getOsrmTime( double lat1, double lon1 , double lat2,
                               double lon2, double &time )
 {

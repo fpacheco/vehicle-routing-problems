@@ -9,6 +9,14 @@
 
 BOOST_AUTO_TEST_SUITE( PhantomNodeTest )
 
+BOOST_AUTO_TEST_CASE( bearing )
+{
+  std::cout << "Bering:"<< std::endl;
+  PhantomNode pn = PhantomNode();
+  pn.setBearing(123.123);
+  BOOST_REQUIRE_CLOSE(pn.bearing(), 123.123, 0.0001);
+}
+
 BOOST_AUTO_TEST_CASE( init )
 {
 
@@ -30,9 +38,9 @@ BOOST_AUTO_TEST_CASE( init )
     std::cout << "phantomNodeId,lon,lat,fwNodeId,rvNodeId,fwWeight, rvWeight, nameId" << std::endl;
     std::cout << pn.id() << pn.point().x() << pn.point().y() << pn.forwNodeId() << pn.reveNodeId() <<  pn.forwWeight() <<  pn.reveWeight() <<  pn.nameId()<< std::endl;
 
-    BOOST_REQUIRE_EQUAL(phantomNodeId,pn.id());
-    BOOST_REQUIRE_EQUAL(ilon,pn.point().x());
-    BOOST_REQUIRE_EQUAL(ilat,pn.point().y());
+    BOOST_REQUIRE_EQUAL(phantomNodeId, pn.id());
+    BOOST_REQUIRE_CLOSE(ilon,pn.point().x(),0.0001);
+    BOOST_REQUIRE_CLOSE(ilat,pn.point().y(),0.0001);
     BOOST_REQUIRE_EQUAL(fwNodeId,pn.forwNodeId());
     BOOST_REQUIRE_EQUAL(rvNodeId,pn.reveNodeId());
     BOOST_REQUIRE_EQUAL(fwWeight,pn.forwWeight());
@@ -46,8 +54,8 @@ BOOST_AUTO_TEST_CASE( init )
     std::cout << pn2.id() << "," << pn2.point().x() << "," << pn2.point().y() << "," << pn2.forwNodeId() << "," << pn2.reveNodeId() << "," <<  pn2.forwWeight() << "," <<  pn2.reveWeight() << "," <<  pn2.nameId()<< "," << std::endl;
 
     BOOST_REQUIRE_EQUAL(pn2.id(),pn.id());
-    BOOST_REQUIRE_EQUAL(pn2.point().x(),pn.point().x());
-    BOOST_REQUIRE_EQUAL(pn2.point().y(),pn.point().y());
+    BOOST_REQUIRE_CLOSE(pn2.point().x(),pn.point().x(),0.0001);
+    BOOST_REQUIRE_CLOSE(pn2.point().y(),pn.point().y(),0.0001);
     BOOST_REQUIRE_EQUAL(pn2.forwNodeId(),pn.forwNodeId());
     BOOST_REQUIRE_EQUAL(pn2.reveNodeId(),pn.reveNodeId());
     BOOST_REQUIRE_EQUAL(pn2.forwWeight(),pn.forwWeight());

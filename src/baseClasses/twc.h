@@ -153,6 +153,21 @@ public:
 
 public:
   /**
+   * @brief Get bearing for nid.
+   *
+   * This information is relevant in right side pickup trucks/containers
+   *
+   */
+  bool getBearingForNId(UID nid, double &bearing) const {
+    auto it = mPhantomNodes.find( nid );
+    if ( it!=mPhantomNodes.end() ) {
+      bearing = it->second.bearing();
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * @brief Get after or before Twnode for a pickup that has PhantomNode
    *
    * This information is relevant in right side pickup trucks/containers
@@ -217,97 +232,102 @@ private:
     osrmi->useOsrm(true);  //forcing osrm usage
     osrmi->clear();
 
-    int pncount = 0;
-    for (UINT i = 0; i < original.size(); i++) {
-        // Only picukp has phantom nodes
-        if ( original[i].isPickup() ) {
-        #ifdef VRPMINTRACE
-            std::cout.precision(6);
-            DLOG(INFO) << original[i].id() << " is pickup!";
-        #endif
-            one_way = 100;
-            // Custom/modified version of nearest plugin
-            osrmi->getOsrmNearest( original[i].x(), original[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
-            // Get nearest fisical OSRM node (edge intersection) of phantom
-            osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
-            // Set phantom node
-            PhantomNode pn = PhantomNode(pncount, phaNLon, phaNLat, fw_id, rv_id, fw_wt, rv_wt, street_id);
-            // Bearing calculation
-            Node phyNode = Node(phyNLon,phyNLat);
-            Node phaNode = Node(phaNLon,phaNLat);
-            bool ret = original[i].isRightToSegment(phyNode, phaNode);
-            double bearing;
-            if (ret) {
-              bearing = phyNode.bearing(phaNode, false);
-            } else {
-              bearing = phyNode.bearing(phaNode, true);
-            }
-            // Set pn bearing
-            pn.setBearing(bearing);
-            // Check one_way and two_ways streets
-            if (one_way == 1) {
-              #ifdef VRPMINTRACE
-                  DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is one way street with bearing " << bearing;
-              #endif
-            } else if (one_way == 0) {
-                #ifdef VRPMINTRACE
-                    DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is in two way street! " << bearing;
-                #endif
-                // Add before and after to pn
-                double alon, alat, blon, blat;
-                // WARNING: longitude and latitude!!!!!!
-                // Only valid for very short distances
-                //
-                // I think
-                //
-                // FN---------PN
-                //            |
-                //         original[i]
-                //
-                // Before
-                blon = phyNLon + mb * (phaNLon - phyNLon);
-                blat = phyNLat + mb * (phaNLat - phyNLat);
-                // After
-                alon = phyNLon + ma * (phaNLon - phyNLon);
-                alat = phyNLat + ma * (phaNLat - phyNLat);
+    int pncount;
+    pncount = 0;
 
-                /*
+    // All nodes must have bearing (pickups, dumps, etc)
+    for (UINT i = 0; i < original.size(); i++) {
+      // Only picukp has phantom nodes (OBSOLETE!)
+      // if ( original[i].isPickup() ) {
+      one_way = 100;
+
+      // Custom/modified version of nearest plugin
+      osrmi->getOsrmNearest( original[i].x(), original[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+
+      // Get nearest fisical OSRM node (edge intersection) of phantom
+      osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
+
+      // Set phantom node
+      PhantomNode pn = PhantomNode(pncount, phaNLon, phaNLat, fw_id, rv_id, fw_wt, rv_wt, street_id);
+
+      // Bearing calculation
+      Node phyNode = Node(phyNLon,phyNLat);
+      Node phaNode = Node(phaNLon,phaNLat);
+      bool ret = original[i].isRightToSegment(phyNode, phaNode);
+      double bearing;
+      if (ret) {
+        bearing = phyNode.bearing(phaNode, false);
+      } else {
+        bearing = phyNode.bearing(phaNode, true);
+      }
+      // Set pn bearing
+      pn.setBearing(bearing);
+
+      // Check one_way and two_ways streets
+      if (one_way == 1) {
+#ifdef VRPMINTRACE
+        DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is one way street with bearing " << bearing;
+#endif
+      } else if (one_way == 0) {
+#ifdef VRPMINTRACE
+        DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is in two way street! " << bearing;
+#endif
+        // Add before and after to pn
+        double alon, alat, blon, blat;
+        // WARNING: longitude and latitude!!!!!!
+        // Only valid for very short distances
+        //
+        // I think
+        //
+        // FN---------PN
+        //            |
+        //         original[i]
+        //
+        // Before
+        blon = phyNLon + mb * (phaNLon - phyNLon);
+        blat = phyNLat + mb * (phaNLat - phyNLat);
+        // After
+        alon = phyNLon + ma * (phaNLon - phyNLon);
+        alat = phyNLat + ma * (phaNLat - phyNLat);
+
+        /*
                 #ifdef VRPMINTRACE
                     std::cout << std::setprecision(8) << "PN: (" << pnlon << "," << pnlat << ")" << std::endl;
                     std::cout << "FN: (" << phyNLon << "," << phyNLat << ")" << std::endl;
                     std::cout << "Before: (" << blon << "," << blat << ")" << std::endl;
                     std::cout << "After: (" << alon << "," << alat << ")" << std::endl;
                 #endif
-                */
-                Point pb, pa;
-                if (ret) {
-                    pb = Point(blon,blat);
-                    pa = Point(alon,alat);
-                    pn.setBeforePNode( pb );
-                    pn.setAfterPNode( pa );
-                } else {
-                    // Not as you think!!!
-                    //
-                    //         original[i]
-                    //            |
-                    // FN---------PN
-                    //
-                    pb = Point(alon,alat);
-                    pa = Point(blon,blat);
-                    pn.setBeforePNode( pb );
-                    pn.setAfterPNode( pa );
-                }
-            }
+        */
 
-            #ifdef VRPMINTRACE
-                DLOG(INFO) << std::setprecision(8) << "PhantomNode";
-                DLOG(INFO) << pn;
-            #endif
-
-            // Add pn to de map. Map i with nid (internal node id) NOT id (user node id).
-            mPhantomNodes[ original[i].nid() ] = pn;
-            pncount++;
+        Point pb, pa;
+        if (ret) {
+          pb = Point(blon,blat);
+          pa = Point(alon,alat);
+          pn.setBeforePNode( pb );
+          pn.setAfterPNode( pa );
+        } else {
+          // Not as you think!!!
+          //
+          //         original[i]
+          //            |
+          // FN---------PN
+          //
+          pb = Point(alon,alat);
+          pa = Point(blon,blat);
+          pn.setBeforePNode( pb );
+          pn.setAfterPNode( pa );
         }
+      }
+
+#ifdef VRPMINTRACE
+      DLOG(INFO) << std::setprecision(8) << "PhantomNode";
+      DLOG(INFO) << pn;
+#endif
+
+      // Add pn to de map. Map i with nid (internal node id) NOT id (user node id).
+      mPhantomNodes[ original[i].nid() ] = pn;
+      pncount++;
+      //} // if pickup
     }
     osrmi->useOsrm(oldStateOsrm);
 
@@ -370,10 +390,10 @@ private:
     nodes_onTrip.clear();
     process_order.clear();
     process_order_far.clear();
-#ifdef OSRMCLIENT
-    // travel_Time4.clear();
-    mPhantomNodes.clear();
-#endif
+    #ifdef OSRMCLIENT
+      // travel_Time4.clear();
+      mPhantomNodes.clear();
+    #endif
   }
 
 
@@ -670,12 +690,6 @@ bool  findPairNodesHasMoreNodesOnPath(
   subPath.push_back(original[bestTo]);
 }
 
-
-
-
-
-
-
 bool  findNodeHasMoreNodesOnPath(const TwBucket<knode> &trip,
     const TwBucket<knode> &assigned, const TwBucket<knode> &unassigned,
     const knode &dumpSite, UINT &bestNode, UINT &bestPos, TwBucket<knode> &subPath) const {
@@ -955,22 +969,24 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   osrmi->clear();
 
   // To build the call
-  std::deque< Twnode > call;
+  std::vector< Twnode > call;
+  std::vector< double > bearings;
 
-  call.push_back(nodesOnPath[0]);
-  Twnode twn;
-  if ( getTWPhantomNodeForNId(nodesOnPath[0].nid(), pnAfter, twn) ) {
-    call.push_back(twn);
-  }
-  for (unsigned int i = 1; i < nodesOnPath.size(); ++i) {
-    if ( getTWPhantomNodeForNId(nodesOnPath[i].nid(), pnBefore, twn) ) {
-      call.push_back(twn);
+  // Add nodes and bearings to data containers
+  for (unsigned int i = 0; i < nodesOnPath.size(); ++i) {
+    double bearing;
+    if ( getBearingForNId(nodesOnPath[i].nid(), bearing) ) {
+      bearings.push_back(bearing);
+      call.push_back(nodesOnPath[i]);
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << nodesOnPath[i].nid() << "(" << nodesOnPath[i].id() << ") have no bearing!";
+#endif
     }
-    call.push_back(nodesOnPath[i]);
   }
 
   // Add point to the call
-  osrmi->addViaPoints(call);
+  osrmi->addViaPoints(call, bearings);
   if (!osrmi->getOsrmViaroute()) {
     #ifdef VRPMINTRACE
         DLOG(INFO) << "getOsrmViaroute failed";
@@ -1000,138 +1016,62 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   // Restore previous
   osrmi->useOsrm(oldStateOsrm);
 
-
   // fills the 2D table
-  // Lo nuevo
-  for (int i = 0; i < call.size()-1; ++i) {
+  for (int i = 0; i < nodesOnPath.size()-1; ++i) {
+    for (int j = i + 1; j < nodesOnPath.size(); ++j) {
 
-    if ( !call[i].isPhantomNode() ) {
-      UID from = call[i].nid();
+      THROW_ON_SIGINT
 
-      // Is valid only from i TO j NOT IN REVERSE!!!!!
-      for (int j = i + 1; j < call.size(); ++j) {
+      UINT from = nodesOnPath[i].nid();
+      UINT to = nodesOnPath[j].nid();
+      assert (from < original.size());
+      assert (to < original.size());
+      if (from != to) {
 
-        if ( !call[j].isPhantomNode() ) {
-          UID to = call[j].nid();
+        if (travel_time_onTrip[from][to] == 0) {
+          travel_time_onTrip[from][to] = times[j]-times[i];
+          travel_Time[from][to] = times[j]-times[i];
 
-          #ifdef VRPMINTRACE
-            DLOG(INFO) << "(i,j)=(" << i << "," << j << ")";
-            DLOG(INFO) << "(from,to)=(" << from << "," << to << ")";
-          #endif
-
-          if (from != to) {
-            // First time trip
-            if (travel_time_onTrip[from][to] == 0) {
-              // Set
-              travel_time_onTrip[from][to] = times[j]-times[i];
-              travel_Time[from][to] = times[j]-times[i];
-              // Recalculate
-              nodes_onTrip[from][to].clear();
-              for (int k = i + 1; k < j; ++k) {
-                if ( !call[k].isPhantomNode() ) {
-                  UINT nodeOnPath = call[k].nid();
-                  assert (nodeOnPath < original.size());
-                  if ( call[k].isPickup() ) {
-                    #ifdef VRPMINTRACE
-                      DLOG(INFO) << "k=" << k;
-                      DLOG(INFO) << "nodeOnPath=" << nodeOnPath;
-                    #endif
-                    // Add node nid to trip
-                    nodes_onTrip[from][to].push_back(nodeOnPath);
-                  }
-                }
-              }
-
-              #ifdef VRPMINTRACE
-                std::stringstream ss;
-                for (unsigned int i = 0; i < nodes_onTrip[from][to].size(); ++i) {
-                  ss << nodes_onTrip[from][to][i] << ", ";
-                }
-                DLOG(INFO) << "nodes_onTrip[" << from << "][" << to << "]: " << ss.str();
-              #endif
-
-              // Got to next j if one
-              continue;
-            }
-
-            //El valor actual es mayor cambiarlo y poner nodos qu estan en el trip actual!
-            if (travel_time_onTrip[from][to] > (times[j]-times[i])) {
-              #ifdef VRPMINTRACE
-                DLOG(INFO) << from << "," << to << " -> ";
-                DLOG(INFO) << " old value " << travel_time_onTrip[from][to];
-                DLOG(INFO) << " new value " << times[j]-times[i];
-                DLOG(INFO) << " ----> changed ";
-              #endif
-
-              travel_time_onTrip[from][to] = times[j]-times[i];
-              travel_Time[from][to] = times[j]-times[i];
-
-              nodes_onTrip[from][to].clear();
-              for (int k = i + 1; k < j; ++k) {
-                if ( !call[k].isPhantomNode() ) {
-                  UINT nodeOnPath = call[k].nid();
-                  assert (nodeOnPath < original.size());
-                  if ( call[k].isPickup() ) {
-                    nodes_onTrip[from][to].push_back(nodeOnPath);
-                  }
-                }
-              }
-
-              #ifdef VRPMINTRACE
-                std::stringstream ss;
-                for (unsigned int i = 0; i < nodes_onTrip[from][to].size(); ++i) {
-                  ss << nodes_onTrip[from][to][i] << ", ";
-                }
-                DLOG(INFO) << "nodes_onTrip[" << from << "][" << to << "]: " << ss.str();
-              #endif
-
-            }
+          nodes_onTrip[from][to].clear();
+          for (int k = i + 1; k < j; ++k) {
+            UINT nodeOnPath = nodesOnPath[k].nid();
+            assert (nodeOnPath < original.size());
+            if (nodesOnPath[k].isPickup()) nodes_onTrip[from][to].push_back(nodeOnPath);
           }
+#ifdef VRPMAXTRACE
+          for (unsigned int i = 0; i < nodes_onTrip[from][to].size(); ++i) {
+            DLOG(INFO) << nodes_onTrip[from][to][i];
+          }
+#endif
+          continue;
         }
 
+        if (travel_time_onTrip[from][to] > (times[j]-times[i])) {
+#ifdef VRPMAXTRACE
+          DLOG(INFO) << from << "," << to << " -> ";
+          DLOG(INFO) << " old value " << travel_time_onTrip[from][to];
+          DLOG(INFO) << " new value " << times[j]-times[i];
+          DLOG(INFO) << " ----> changed ";
+#endif
+          travel_time_onTrip[from][to] = times[j]-times[i];
+          travel_Time[from][to] = times[j]-times[i];
+
+          nodes_onTrip[from][to].clear();
+          for (int k = i + 1; k < j; ++k) {
+            UINT nodeOnPath = nodesOnPath[k].nid();
+            assert (nodeOnPath < original.size());
+            if (nodesOnPath[k].isPickup()) nodes_onTrip[from][to].push_back(nodeOnPath);
+          }
+#ifdef VRPMAXTRACE
+          for (unsigned int i = 0; i < nodes_onTrip[from][to].size(); ++i) {
+            DLOG(INFO) << nodes_onTrip[from][to][i];
+          }
+#endif
+        }
+        //        }
       }
     }
   }
-
-/*
-#if 0
-  // extract triplets/quadruplets and store in table
-  UINT i_nid, j_nid, k_nid, l_nid;
-  double timeij, timejk, timeijk, timeijkl, timejkl;
-  for (unsigned int i = 0; i < nodesOnPath.size()-2; ++i) {
-    if (!(i< nodesOnPath.size())) continue;
-    i_nid = nodesOnPath[i].nid();
-
-    for (unsigned int j = i + 1; j < nodesOnPath.size()-1; ++j) {
-      j_nid = nodesOnPath[j].nid();
-      timeij = travel_time_onTrip[i_nid][j_nid];
-      travel_Time[i_nid][j_nid] = timeij;
-
-      for (unsigned int k = j + 1; k < nodesOnPath.size(); ++k) {
-        k_nid = nodesOnPath[k].nid();
-        timejk = travel_time_onTrip[j_nid][k_nid];
-        timeijk = timeij + timejk;
-        travel_Time4Insert(i_nid, i_nid, j_nid, k_nid, timeijk);
-
-// DLOG(INFO) << original[i_nid].id() << ", " << original[j_nid].id() << ", " << original[k_nid].id()  << " -> " << timeijk;
-        for (unsigned int l = k + 1; l < nodesOnPath.size(); ++l) {
-          if (!(l < nodesOnPath.size())) continue;
-          l_nid = nodesOnPath[l].nid();
-          timejkl = timejk + travel_time_onTrip[k_nid][l_nid];
-          travel_Time4Insert(j_nid, j_nid, k_nid, l_nid, timejkl);
-// DLOG(INFO) <<  original[j_nid].id() << ", " << original[k_nid].id() << ", " << original[l_nid].id() << " -> " << timejkl;
-
-          timeijkl = timeijk + travel_time_onTrip[k_nid][l_nid];
-          travel_Time4Insert(i_nid, j_nid, k_nid, l_nid, timeijkl);
-// DLOG(INFO) << original[i_nid].id() << ", " << original[j_nid].id() << ", " << original[k_nid].id() << ", " << original[l_nid].id() << " -> " << timeijkl;
-        }  // l
-      }  //k
-    }  // j
-  }  // i
-
-// assert(true==false);
-#endif
-*/
 
   #ifdef VRPMINTRACE
     DLOG(INFO) << "Updated travel_Time";
@@ -1152,16 +1092,6 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   #endif
 
 }
-
-/*
-#if 0
-void travel_Time4Insert(UINT i_nid, UINT j_nid, UINT k_nid, UINT l_nid, double time) const {
-  TTindex index(i_nid, j_nid, k_nid, l_nid);
-  if (travel_Time4.find(index) == travel_Time4.end()) return;
-  travel_Time4.insert(std::pair<TTindex,double>(index, time));
-}
-#endif
-*/
 
 
 /*!
@@ -1199,30 +1129,37 @@ void getNodesOnPath (
 
   // buld call
   osrmi->setWantGeometry(true);
-  // To call OSRM
-  // En calle de dos vias
-  // Para el truck[0] debo imponer que vaya luego al afterPNode
-  // Para el resto que pase por beforePNode
-  std::deque< Twnode > call;
 
-  // Loop in truck. Add PhantomNode if necessary!
-  call.push_back(truck[0]);
-  Twnode twn;
-  if ( getTWPhantomNodeForNId(truck[0].nid(), pnAfter, twn) ) {
-    call.push_back(twn);
-  }
-  for (unsigned int i = 1; i < truck.size(); ++i) {
-    if ( getTWPhantomNodeForNId(truck[i].nid(), pnBefore, twn) ) {
-      call.push_back(twn);
+  // To build the call
+  std::vector< Twnode > call;
+  std::vector< double > bearings;
+
+  // Add nodes and bearings to data containers
+  for (unsigned int i = 0; i < truck.size(); ++i) {
+    double bearing;
+    if ( getBearingForNId(truck[i].nid(), bearing) ) {
+      bearings.push_back(bearing);
+      call.push_back(truck[i]);
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << truck[i].nid() << "(" << truck[i].id() << ") have no bearing!";
+#endif
     }
-    call.push_back(truck[i]);
   }
 
   // Add dumpsite
-  call.push_back(dumpSite);
+  double bearing;
+  if ( getBearingForNId(dumpSite.nid(), bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(dumpSite);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << dumpSite.nid() << "(" << dumpSite.id() << ") have no bearing!";
+#endif
+  }
 
   // Add points to osrm
-  osrmi->addViaPoints(call);
+  osrmi->addViaPoints(call, bearings);
 
   if (!osrmi->getOsrmViaroute()) {
     #ifdef VRPMINTRACE
@@ -1488,6 +1425,7 @@ NONE
 bool setTravelingTimesOfRoute(
    const TwBucket<knode> &truck,
    const knode &dumpSite) const {
+
 #ifdef VRPMINTRACE
   DLOG(INFO) << "started setTravelingTimesOfRoute";
 #endif
@@ -1496,99 +1434,137 @@ bool setTravelingTimesOfRoute(
   DLOG(INFO) << "NO OSRM";
   return false;
 #else  // with OSRMCLIENT
+
+
   bool oldStateOsrm = osrmi->getUse();
   osrmi->useOsrm(true);  //forcing osrm usage
 
-  // build call
+  // To build the call
   unsigned int tSize = truck.size();
-  std::deque< Twnode > call;
+  std::vector< Twnode > call;
+  std::vector< double > bearings;
   std::deque< double > times;
   osrmi->clear();
 
+  double bearing;
+
   // cycle 1:
-  call.push_back(truck[0]);
-  Twnode twn;
-  if ( getTWPhantomNodeForNId(truck[0].nid(), pnAfter, twn) ) {
-    call.push_back(twn);
-  }
-  for (unsigned int i = 1; i < truck.size(); ++i) {
-    if ( getTWPhantomNodeForNId(truck[i].nid(), pnBefore, twn) ) {
-      call.push_back(twn);
+  for (unsigned int i = 0; i < tSize; ++i) {
+    if ( getBearingForNId(truck[i].nid(), bearing) ) {
+      bearings.push_back(bearing);
+      call.push_back(truck[i]);
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << truck[i].nid() << "(" << truck[i].id() << ") have no bearing!";
+#endif
     }
-    call.push_back(truck[i]);
   }
-  // Dump site dont have phantomnode
-  call.push_back(dumpSite);
+
+  // Add dumpsite
+  if ( getBearingForNId(dumpSite.nid(), bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(dumpSite);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << dumpSite.nid() << "(" << dumpSite.id() << ") have no bearing!";
+#endif
+  }
 
 #if 1
   // cycle 2:
-  // Dump site dont have phantomnode
-  call.push_back(dumpSite);
+  // Add dumpsite
+  if ( getBearingForNId(dumpSite.nid(), bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(dumpSite);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << dumpSite.nid() << "(" << dumpSite.id() << ") have no bearing!";
+#endif
+  }
+
   for (int i = tSize - 1; i >= 0; --i) {
-    if ( getTWPhantomNodeForNId(truck[i].nid(), pnBefore, twn) ) {
-      call.push_back(twn);
+    if ( getBearingForNId(truck[i].nid(), bearing) ) {
+      bearings.push_back(bearing);
+      call.push_back(truck[i]);
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << truck[i].nid() << "(" << truck[i].id() << ") have no bearing!";
+#endif
     }
-    call.push_back(truck[i]);
   }
 #endif
 
   // process osrm
-  osrmi->addViaPoints(call);
+  osrmi->addViaPoints(call, bearings);
   if (!osrmi->getOsrmViaroute()) {
      DLOG(INFO) << "getOsrmViaroute failed";
      osrmi->useOsrm(oldStateOsrm);
      return false;
   }
+
   if (!osrmi->getOsrmTimes(times)){
      DLOG(INFO) << "getOsrmTimes failed";
      osrmi->useOsrm(oldStateOsrm);
      return false;
   }
 
+
   // lets have a peek
-  #ifdef VRPMINTRACE
-      DLOG(INFO) << "squential";
-      for (unsigned int i= 0; i < call.size(); ++i) {
-        DLOG(INFO) << call[i].id() << "->" << times[i];
-      }
+  #ifdef VRPMAXTRACE
+  DLOG(INFO) << "squential";
+  for (unsigned int i= 0; i < call.size(); ++i) {
+    DLOG(INFO) << call[i].id() << "," << times[i];
+  }
   #endif
 
-  #ifdef VRPMINTRACE
-    DLOG(INFO) << "setting travel_Time (pairs). call.size = " << call.size();
+
+  #ifdef VRPMAXTRACE
+  DLOG(INFO) << "pairs";
   #endif
-  // Take only nodes not PhantomNodes. Set ONLY pairs times in travel_Time matrix!
-  for (int i = 0; i < call.size()-1; ++i) {
-    // Already commented!
+  for (unsigned int i = 0; i < call.size()-1; ++i) {
     //TravelTime(call[i].nid(), call[i+1].nid());
-    if ( !call[i].isPhantomNode() ) {
-      UID from = call[i].nid();
-      // Find next pickup (from) and store travel time in travel_Time matrix
-      for (int j = i + 1; j < call.size(); ++j) {
-        #ifdef VRPMINTRACE
-          DLOG(INFO) << "(i,j)=(" << i << "," << j << ") | time=" << times[j] - times[i];
-        #endif
-        if ( !call[j].isPhantomNode() ) {
-          UID to = call[j].nid();
-          if ( from!=to ) {
-            #ifdef VRPMINTRACE
-              DLOG(INFO) << "call[" << i << "].nid() = " << call[i].nid() << "|" "call[" << j << "].nid() = " << call[j].nid();
-            #endif
-            travel_Time[from][to] = times[j]-times[i];
-            #ifdef VRPMINTRACE
-              DLOG(INFO) << "travel_Time from point " << call[i].id() << " to point " << call[j].id() << " is " << times[j] - times[i];
-            #endif
-          }
-          // Break the for j, next i!.
-          break;
-        }
-      }
-    }
+    travel_Time[call[i].nid()][call[i+1].nid()] = times[i+1]-times[i];
+    #ifdef VRPMAXTRACE
+    DLOG(INFO) << call[i].id() << " -> "
+               << call[i+1].id() << " = " << times[i+1] - times[i];
+    #endif
   }
+
+#if 0
+  // extract triplets and store in table
+  #ifdef VRPMAXTRACE
+  DLOG(INFO) << "triplets";
+  #endif
+  for (unsigned int i = 0; i < call.size()-2; ++i) {
+    // TTindex index(call[i].nid(), call[i].nid(), call[i+1].nid(), call[i+2].nid());
+    // travel_Time4.insert(std::pair<TTindex,double>(index, times[i+2]-times[i]));
+    travel_Time4Insert( call[i].nid(), call[i].nid(), call[i+1].nid(), call[i+2].nid(), times[i+2]-times[i]);
+    #ifdef VRPMAXTRACE
+    DLOG(INFO) << call[i].id() << " -> "
+               << call[i+1].id() << " -> "
+               << call[i+2].id() << " = " << times[i+2] - times[i];
+    #endif
+  }
+
+  // extract quadraplets and store in table
+  #ifdef VRPMAXTRACE
+  DLOG(INFO) << "quadruplets";
+  #endif
+  for (unsigned int i= 0; i < call.size()-3; ++i) {
+    // TTindex index(call[i].nid(), call[i+1].nid(), call[i+2].nid(), call[i+3].nid());
+    //travel_Time4.insert(std::pair<TTindex,double>(index, times[i+3]-times[i]));
+    travel_Time4Insert( call[i].nid(), call[i+1].nid(), call[i+2].nid(), call[i+3].nid(), times[i+3]-times[i]);
+    #ifdef VRPMAXTRACE
+    DLOG(INFO) << call[i].id() << " -> "
+               << call[i+1].id() << " -> "
+               << call[i+2].id() << " -> "
+               << call[i+3].id() << " = " <<  times[i+3]-times[i];
+    #endif
+  }
+#endif
   osrmi->useOsrm(oldStateOsrm);
 #endif  // with OSRMCLIENT
 }
-
-
 
 /*!
 truck: 0 1 2 3 4 5 6 D
@@ -1623,14 +1599,12 @@ bool setTravelingTimesInsertingOneNode(
    const TwBucket<knode> &truck,
    const knode &dumpSite,
    const knode &node) const {
-#ifdef VRPMINTRACE
-  DLOG(INFO) << "started setTravelingTimesInsertingOneNode";
-#endif
-
 #ifndef OSRMCLIENT
   DLOG(INFO) << "NO OSRM";
   return false;
 #else  // with OSRMCLIENT
+
+
   bool oldStateOsrm = osrmi->getUse();
   osrmi->useOsrm(true);  //forcing osrm usage
 
@@ -1644,76 +1618,144 @@ bool setTravelingTimesInsertingOneNode(
   unsigned int tSize = truck.size();
   osrmi->clear();
 
-  std::deque< Twnode > call;
+  std::vector< Twnode > call;
+  std::vector< double > bearings;
   std::deque< double > times;
+  // NO clear????
+  osrmi->clear();
 
+  /*
   // special case  0 n 1
-  call.push_back(truck[0]);
-  // Insert after if node has PhantomNode
-  Twnode twn;
-  if ( getTWPhantomNodeForNId(truck[0].nid(), pnAfter, twn) ) {
-    call.push_back(twn);
+  for (unsigned int i = 0; i < tSize; ++i) {
+    if ( getBearingForNId(truck[i].nid(), bearing) ) {
+      bearings.push_back(bearing);
+      call.push_back(truck[i]);
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << truck[i].nid() << "(" << truck[i].id() << ") have no bearing!";
+#endif
+    }
   }
 
-  // Insert before if node has PhantomNode
-  if ( getTWPhantomNodeForNId(node.nid(), pnBefore, twn) ) {
-    call.push_back(twn);
+  // Add dumpsite
+  if ( getBearingForNId(dumpSite.nid(), bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(dumpSite);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << dumpSite.nid() << "(" << dumpSite.id() << ") have no bearing!";
+#endif
   }
-  call.push_back(node);
+  */
 
-  // Insert before if node has PhantomNode
-  if ( getTWPhantomNodeForNId(truck[1].nid(), pnBefore, twn) ) {
-    call.push_back(twn);
+  if ( getBearingForNId(truck[0], bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(truck[0]);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << truck[0].nid() << "(" << truck[0].id() << ") have no bearing!";
+#endif
   }
-  call.push_back(truck[1]);
-  // End special case
+
+  if ( getBearingForNId(node.nid(), bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(node);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << node.nid() << "(" << node.id() << ") have no bearing!";
+#endif
+  }
+
+  if ( getBearingForNId(truck[1], bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(truck[1]);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << truck[1].nid() << "(" << truck[1].id() << ") have no bearing!";
+#endif
+  }
 
   // cycle:
   if (tSize > 2) {
     for (unsigned int i= 0; i < tSize - 3; ++i) {
-      // i
-      call.push_back(truck[i]);
-      if ( getTWPhantomNodeForNId(truck[i].nid(), pnAfter, twn) ) {
-        call.push_back(twn);
+      if ( getBearingForNId(truck[i], bearing) ) {
+        bearings.push_back(bearing);
+        call.push_back(truck[i]);
+      } else {
+    #ifdef VRPMINTRACE
+        DLOG(INFO) << "Error: Node " << truck[i].nid() << "(" << truck[i].id() << ") have no bearing!";
+    #endif
       }
-      // i +1
-      if ( getTWPhantomNodeForNId(truck[i+1].nid(), pnBefore, twn) ) {
-        call.push_back(twn);
+      if ( getBearingForNId(truck[i+1], bearing) ) {
+        bearings.push_back(bearing);
+        call.push_back(truck[i+1]);
+      } else {
+    #ifdef VRPMINTRACE
+        DLOG(INFO) << "Error: Node " << truck[i+1].nid() << "(" << truck[i+1].id() << ") have no bearing!";
+    #endif
       }
-      call.push_back(truck[i+1]);
-      // node
-      if ( getTWPhantomNodeForNId(node.nid(), pnBefore, twn) ) {
-        call.push_back(twn);
+
+      if ( getBearingForNId(node.nid(), bearing) ) {
+        bearings.push_back(bearing);
+        call.push_back(node);
+      } else {
+    #ifdef VRPMINTRACE
+        DLOG(INFO) << "Error: Node " << node.nid() << "(" << node.id() << ") have no bearing!";
+    #endif
       }
-      call.push_back(node);
-      // i + 2
-      if ( getTWPhantomNodeForNId(truck[i+2].nid(), pnBefore, twn) ) {
-        call.push_back(twn);
+
+      if ( getBearingForNId(truck[i+2], bearing) ) {
+        bearings.push_back(bearing);
+        call.push_back(truck[i+2]);
+      } else {
+    #ifdef VRPMINTRACE
+        DLOG(INFO) << "Error: Node " << truck[i+2].nid() << "(" << truck[i+2].id() << ") have no bearing!";
+    #endif
       }
-      call.push_back(truck[i+2]);
+
     }
   }
-
   // special case 5 6 n   // 0 1 n D
-  call.push_back(truck[tSize - 2]);
-  if ( getTWPhantomNodeForNId(truck[tSize - 2].nid(), pnAfter, twn) ) {
-    call.push_back(twn);
+  if ( getBearingForNId(truck[tSize - 2], bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(truck[tSize - 2]);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << truck[tSize - 2].nid() << "(" << truck[tSize - 2].id() << ") have no bearing!";
+#endif
   }
 
-  if ( getTWPhantomNodeForNId(truck[tSize - 1].nid(), pnBefore, twn) ) {
-    call.push_back(twn);
+  if ( getBearingForNId(truck[tSize - 1], bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(truck[tSize - 1]);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << truck[tSize - 1].nid() << "(" << truck[tSize - 1].id() << ") have no bearing!";
+#endif
   }
-  call.push_back(truck[tSize - 1]);
 
-  if ( getTWPhantomNodeForNId(node.nid(), pnBefore, twn) ) {
-    call.push_back(twn);
+  if ( getBearingForNId(node.nid(), bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(node);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << node.nid() << "(" << node.id() << ") have no bearing!";
+#endif
   }
-  call.push_back(node);
-  // Dumpsite dont has phantom node
-  call.push_back(dumpSite);
+
+  if ( getBearingForNId(dumpSite.nid(), bearing) ) {
+    bearings.push_back(bearing);
+    call.push_back(dumpSite);
+  } else {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Error: Node " << dumpSite.nid() << "(" << dumpSite.id() << ") have no bearing!";
+#endif
+  }
+
 
   // process osrm
-  osrmi->addViaPoints(call);
+  osrmi->addViaPoints(call,bearings);
+
   if (!osrmi->getOsrmViaroute()) {
      DLOG(INFO) << "getOsrmViaroute failed";
      osrmi->useOsrm(oldStateOsrm);
@@ -1727,98 +1769,26 @@ bool setTravelingTimesInsertingOneNode(
 
 
   // lets have a peek
-  #ifdef VRPMINTRACE
-    DLOG(INFO) << "squential";
-    DLOG(INFO) << "\tNID\tID\tTIME\t";
-    for (unsigned int i= 0; i < call.size(); ++i) {
-      DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << times[i] << "\t" ;
-    }
+  #ifdef VRPMAXTRACE
+  DLOG(INFO) << "squential";
+  for (unsigned int i= 0; i < call.size(); ++i) {
+    DLOG(INFO) << call[i].id() << "," << times[i];
+  }
   #endif
 
 
   #ifdef VRPMAXTRACE
-    DLOG(INFO) << "pairs";
+  DLOG(INFO) << "pairs";
   #endif
-
-    // Take only nodes not PhantomNodes. Set ONLY pairs times in travel_Time matrix!
-    for (int i = 0; i < call.size()-1; ++i) {
-      if ( !call[i].isPhantomNode() ) {
-        UID from = call[i].nid();
-        // Find next pickup (from) and store travel time in travel_Time matrix
-        for (int j = i + 1; j < call.size(); ++j) {
-          #ifdef VRPMINTRACE
-            DLOG(INFO) << "(i,j)=(" << i << "," << j << ") | time=" << times[j] - times[i];
-          #endif
-          if ( !call[j].isPhantomNode() ) {
-            UID to = call[j].nid();
-            if ( from!=to ) {
-              #ifdef VRPMINTRACE
-                DLOG(INFO) << "call[" << i << "].nid() = " << call[i].nid() << "|" "call[" << j << "].nid() = " << call[j].nid();
-              #endif
-              travel_Time[from][to] = times[j]-times[i];
-              #ifdef VRPMINTRACE
-                DLOG(INFO) << "travel_Time from point " << call[i].nid() << " to point " << call[j].nid() << " is " << times[j] - times[i];
-              #endif
-            }
-            // Break the for j, next i!.
-            break;
-          }
-        }
-      }
-    }
-
-  /*
-  for (unsigned int i = 0; i < call.size(); ++i) {
-    if ( !call[i].isPhantomNode() ) {
-      UID from = call[i].nid();
-      for (unsigned int j = i+1; j < call.size(); ++j) {
-        if ( !call[j].isPhantomNode() ) {
-          UID to = call[j].nid();
-          if ( from!=to ) {
-            TravelTime( from, to );
-            travel_Time[from][to] = times[j]-times[i];
-          }
-        }
-      }
-    }
-  }
-  */
-
-
-  #ifdef VRPMINTRACE
-    DLOG(INFO) << "call data and time!";
-    for ( int i = 0; i < call.size(); i++ ) {
-      DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << call[i].x() << "\t" << call[i].y() << "\t" << times[i] << "\t" ;
-    }
-  #endif
-
-  #ifdef VRPMINTRACE
-    DLOG(INFO) << "Updated travel_Time";
-    int rcSize = original.size();
-    DLOG(INFO) << "Begin travel_Time matrix";
-    for ( int i = 0; i < rcSize; i++ ) {
-      std::stringstream row;
-      for ( int j = 0; j < rcSize; j++ ) {
-          row  << "\t" << travel_Time[i][j];
-      }
-      DLOG(INFO) << row.str();
-    }
-    DLOG(INFO) << "End travel_Time matrix";
-  #endif
-
-  // Old code
-  /*
   for (unsigned int i = 0; i < call.size()-1; ++i) {
-    TravelTime( call[i].nid(), call[i+1].nid() );
+    TravelTime(call[i].nid(), call[i+1].nid());
     travel_Time[call[i].nid()][call[i+1].nid()] = times[i+1]-times[i];
     #ifdef VRPMAXTRACE
     DLOG(INFO) << call[i].id() << " -> "
                << call[i+1].id() << " = " << times[i+1] - times[i];
     #endif
   }
-  */
 
-/*
 #if 0
   // extract triplets and store in table
   #ifdef VRPMAXTRACE
@@ -1836,10 +1806,9 @@ bool setTravelingTimesInsertingOneNode(
     #endif
   }
 
-
   // extract quadraplets and store in table
   #ifdef VRPMAXTRACE
-    DLOG(INFO) << "quadruplets";
+  DLOG(INFO) << "quadruplets";
   #endif
   for (unsigned int i= 3; i < call.size()-1; i+=4) {
     // TTindex index(call[i].nid(), call[i+1].nid(), call[i+2].nid(), call[i+3].nid());
@@ -1853,15 +1822,9 @@ bool setTravelingTimesInsertingOneNode(
     #endif
   }
 #endif
-*/
 
   osrmi->useOsrm(oldStateOsrm);
 #endif  // with OSRMCLIENT
-
-#ifdef VRPMINTRACE
-  DLOG(INFO) << "ended setTravelingTimesInsertingOneNode";
-#endif
-
 }
 
 

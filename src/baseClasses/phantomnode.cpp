@@ -1,7 +1,7 @@
 #include "phantomnode.h"
 
 PhantomNode::PhantomNode(UID phantomNodeId, double x, double y, UID fwNodeId, UID rvNodeId, UID fwWeight, UID rvWeight, UID nameId):
-    mBearing(-1.0), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
+    mBearing(-1.0), mStreetName( std::string() ), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
 {
     mPhantomNodeId = phantomNodeId;
     mPoint = Point(x, y);
@@ -24,7 +24,7 @@ PhantomNode::PhantomNode(const PhantomNode &other) {
     mNetworkNNode = other.mNetworkNNode;
     mBearing = other.mBearing;
     // setStreetName( other.streetName() );
-    // mStreetName.assign(other.mStreetName);
+    // mStreetName = other.mStreetName;
     mNameId = other.mNameId;
 }
 
@@ -53,7 +53,7 @@ PhantomNode& PhantomNode::operator= (const PhantomNode &other)
     mBearing = other.mBearing;
     // mStreetName = other.mStreetName;
     // this->setStreetName( other.streetName() );
-    // mStreetName.assign(other.mStreetName);
+    // mStreetName = std::string(other.mStreetName);
     mNameId = other.mNameId;
     return *this;
 }
