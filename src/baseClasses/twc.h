@@ -206,7 +206,7 @@ private:
     // Variables
     bool oldStateOsrm;
     // PhantomNode
-    double pnlon, pnlat;
+    double phaNLon, phaNLat;
     // Physical Node
     double phyNLon, phyNLat;
     unsigned int one_way;
@@ -226,17 +226,33 @@ private:
             DLOG(INFO) << original[i].id() << " is pickup!";
         #endif
             one_way = 100;
-            osrmi->getOsrmNearest( original[i].x(), original[i].y(), pnlon, pnlat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
-            if (one_way == 0) {
+            // Custom/modified version of nearest plugin
+            osrmi->getOsrmNearest( original[i].x(), original[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+            // Get nearest fisical OSRM node (edge intersection) of phantom
+            osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
+            // Set phantom node
+            PhantomNode pn = PhantomNode(pncount, phaNLon, phaNLat, fw_id, rv_id, fw_wt, rv_wt, street_id);
+            // Bearing calculation
+            Node phyNode = Node(phyNLon,phyNLat);
+            Node phaNode = Node(phaNLon,phaNLat);
+            bool ret = original[i].isRightToSegment(phyNode, phaNode);
+            double bearing;
+            if (ret) {
+              bearing = phyNode.bearing(phaNode, false);
+            } else {
+              bearing = phyNode.bearing(phaNode, true);
+            }
+            // Set pn bearing
+            pn.setBearing(bearing);
+            // Check one_way and two_ways streets
+            if (one_way == 1) {
+              #ifdef VRPMINTRACE
+                  DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is one way street with bearing " << bearing;
+              #endif
+            } else if (one_way == 0) {
                 #ifdef VRPMINTRACE
-                    DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is in two way street!";
+                    DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is in two way street! " << bearing;
                 #endif
-                // Two way street
-                PhantomNode pn = PhantomNode(pncount, pnlon, pnlat, fw_id, rv_id, fw_wt, rv_wt, street_id);
-                // Get nearest fisical OSRM node (edge intersection) of phantom
-                osrmi->getOsrmLocate(pnlon, pnlat, phyNLon, phyNLat);
-                // Set bearing!
-
                 // Add before and after to pn
                 double alon, alat, blon, blat;
                 // WARNING: longitude and latitude!!!!!!
@@ -249,11 +265,11 @@ private:
                 //         original[i]
                 //
                 // Before
-                blon = phyNLon + mb * (pnlon - phyNLon);
-                blat = phyNLat + mb * (pnlat - phyNLat);
+                blon = phyNLon + mb * (phaNLon - phyNLon);
+                blat = phyNLat + mb * (phaNLat - phyNLat);
                 // After
-                alon = phyNLon + ma * (pnlon - phyNLon);
-                alat = phyNLat + ma * (pnlat - phyNLat);
+                alon = phyNLon + ma * (phaNLon - phyNLon);
+                alat = phyNLat + ma * (phaNLat - phyNLat);
 
                 /*
                 #ifdef VRPMINTRACE
@@ -263,11 +279,6 @@ private:
                     std::cout << "After: (" << alon << "," << alat << ")" << std::endl;
                 #endif
                 */
-
-                bool ret = original[i].isRightToSegment(
-                    Node(phyNLon,phyNLat),
-                    Node(pnlon,pnlat)
-                );
                 Point pb, pa;
                 if (ret) {
                     pb = Point(blon,blat);
@@ -286,19 +297,16 @@ private:
                     pn.setBeforePNode( pb );
                     pn.setAfterPNode( pa );
                 }
-                #ifdef VRPMINTRACE
-                    DLOG(INFO) << std::setprecision(8) << "PhantomNode";
-                    DLOG(INFO) << pn;
-                #endif
-                // Add pn to de map. Map i with nid (internal node id) NOT id (user node id).
-                mPhantomNodes[ original[i].nid() ] = pn;
-                pncount++;
             }
+
             #ifdef VRPMINTRACE
-                if (one_way == 1) {
-                    DLOG(INFO) << original[i].nid() << "("<< original[i].id() << ") is in one way street!";
-                }
+                DLOG(INFO) << std::setprecision(8) << "PhantomNode";
+                DLOG(INFO) << pn;
             #endif
+
+            // Add pn to de map. Map i with nid (internal node id) NOT id (user node id).
+            mPhantomNodes[ original[i].nid() ] = pn;
+            pncount++;
         }
     }
     osrmi->useOsrm(oldStateOsrm);
@@ -306,13 +314,14 @@ private:
     #ifdef VRPMINTRACE
         DLOG(INFO) << "Begin PhantomNodes for pickups sites";
         DLOG(INFO) << "\t" << "CONID" << "\t" << "COID" << "\t" << "COLON" << "\t" << "COLAT" << "\t" << "PNID" << "\t" << "PNLON" << "\t" << "PNLAT" << "\t"
-                   << "BELON" << "\t" << "BELAT" << "\t" << "AFLON" << "\t" << "AFLAT";
+                   << "BEARING" << "\t" << "BELON" << "\t" << "BELAT" << "\t" << "AFLON" << "\t" << "AFLAT";
         for (UINT i = 0; i < original.size(); i++) {
             UID nid = original[i].nid();
             auto it = mPhantomNodes.find( nid );
             if ( it!=mPhantomNodes.end() ) {
                 DLOG(INFO) << std::setprecision(8) << "\t" << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
                            << it->second.id() << "\t" << it->second.point().x() << "\t" << it->second.point().y() << "\t"
+                           << it->second.bearing() << "\t"
                            << it->second.beforePNode().x() << "\t" << it->second.beforePNode().y() << "\t"
                            << it->second.afterPNode().x() << "\t" << it->second.afterPNode().y();
             }

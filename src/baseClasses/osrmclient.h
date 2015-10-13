@@ -83,8 +83,10 @@ public:
 
   void clear();
   void addViaPoint( double lat, double lon );
+  void addViaPoint( double lat, double lon, double bearing );
   void addViaPoint( const Twnode &node );
   void addViaPoints( const std::deque<Twnode> &path );
+  //void addViaPoints(const std::deque<Twnode> &path, const std::deque<double> &bearings);
 
   /*!
    * \brief Set whether you want the path geometry returned.

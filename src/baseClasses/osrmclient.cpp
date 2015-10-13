@@ -111,6 +111,7 @@ void OsrmClient::clear()
   Timer timer;
 #endif
   route_parameters.coordinates.clear();
+  route_parameters.bearings.clear();
   route_parameters.hints.clear();
   route_parameters.geometry = false;
   route_parameters.compression = false;
@@ -143,6 +144,32 @@ void OsrmClient::addViaPoint( double lat, double lon )
   FixedPointCoordinate p( lat * COORDINATE_PRECISION,
                           lon * COORDINATE_PRECISION );
   route_parameters.coordinates.push_back( p );
+#ifdef DOSTATS
+  STATS->addto( "OsrmClient::addViaPoint Cumulative time", timer.duration() );
+#endif
+}
+
+/*!
+ * \brief Add a location in WGS84 to the OSRM request.
+ * \param[in] lat The latitude of the location you want to add.
+ * \param[in] lon The Longitude of the location you want to add.
+ * \param[in] bearing The bearing to get this point.
+ * \note route_parameters.coordinates is defined as std::vector<FixedPointCoordinate> in OSRM.h. COORDINATE_PRECISION is also defined in OSRM.h.
+ * \note route_parameters.bearings is defined as std::vector<int> in route_parameters.h.
+ */
+void OsrmClient::addViaPoint( double lat, double lon, double bearing )
+{
+  if ( not connectionAvailable ) return;
+
+  if ( not use ) return;
+
+#ifdef DOSTATS
+  Timer timer;
+#endif
+  FixedPointCoordinate p( lat * COORDINATE_PRECISION,
+                          lon * COORDINATE_PRECISION );
+  route_parameters.coordinates.push_back( p );
+  route_parameters.bearings.push_back( static_cast<int>(bearing) );
 #ifdef DOSTATS
   STATS->addto( "OsrmClient::addViaPoint Cumulative time", timer.duration() );
 #endif

@@ -1,7 +1,7 @@
 #include "phantomnode.h"
 
 PhantomNode::PhantomNode(UID phantomNodeId, double x, double y, UID fwNodeId, UID rvNodeId, UID fwWeight, UID rvWeight, UID nameId):
-    mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) )
+    mBearing(-1.0), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
 {
     mPhantomNodeId = phantomNodeId;
     mPoint = Point(x, y);
@@ -21,6 +21,10 @@ PhantomNode::PhantomNode(const PhantomNode &other) {
     mReveWeight = other.mReveWeight;
     mBeforePNode = other.mBeforePNode;
     mAfterPNode = other.mAfterPNode;
+    mNetworkNNode = other.mNetworkNNode;
+    mBearing = other.mBearing;
+    // setStreetName( other.streetName() );
+    // mStreetName.assign(other.mStreetName);
     mNameId = other.mNameId;
 }
 
@@ -45,6 +49,11 @@ PhantomNode& PhantomNode::operator= (const PhantomNode &other)
     mReveWeight = other.mReveWeight;
     mBeforePNode = other.mBeforePNode;
     mAfterPNode = other.mAfterPNode;
+    mNetworkNNode = other.mNetworkNNode;
+    mBearing = other.mBearing;
+    // mStreetName = other.mStreetName;
+    // this->setStreetName( other.streetName() );
+    // mStreetName.assign(other.mStreetName);
     mNameId = other.mNameId;
     return *this;
 }

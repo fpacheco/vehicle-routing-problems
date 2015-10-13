@@ -285,35 +285,32 @@ double Node::rad_to_deg(const double radian) const
 double Node::bearing(const Node &other, bool reverse) const
 {
 
-      const double lon_diff = other.x() - this->x();
-      const double lon_delta = deg_to_rad(lon_diff);
-      const float lat1 = deg_to_rad( this->y() );
-      const float lat2 = deg_to_rad( other.y() );
-      const float y = std::sin(lon_delta) * std::cos(lat2);
-      const float x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
-      float result = rad_to_deg(std::atan2(y, x));
+  const double lon_diff = other.x() - this->x();
+  const double lon_delta = deg_to_rad(lon_diff);
+  const double lat1 = deg_to_rad( this->y() );
+  const double lat2 = deg_to_rad( other.y() );
+  const double y = std::sin(lon_delta) * std::cos(lat2);
+  const double x = std::cos(lat1) * std::sin(lat2) - std::sin(lat1) * std::cos(lat2) * std::cos(lon_delta);
+  double result = rad_to_deg(std::atan2(y, x));
 
-      while (result < 0.f)
-      {
-          result += 360.f;
-      }
+  while (result < 0.f) {
+    result += 360.f;
+  }
 
-      while (result >= 360.f)
-      {
-          result -= 360.f;
-      }
+  while (result >= 360.f) {
+    result -= 360.f;
+  }
 
-      // From other to this node
-      if (reverse) {
-        if (result<=180) {
-          return (180+result);
-        } else {
-          return (result-180);
-        }
-      }
-
-      // From this to other
-      return result;
+  // From other to this node
+  if (reverse) {
+    if (result<=180) {
+      return (180+result);
+    } else {
+      return (result-180);
+    }
+  }
+  // From this to other
+  return result;
 }
 
 

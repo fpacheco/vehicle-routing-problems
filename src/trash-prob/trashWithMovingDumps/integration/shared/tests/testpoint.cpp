@@ -9,6 +9,7 @@
 
 BOOST_AUTO_TEST_SUITE( PointTest )
 
+
 BOOST_AUTO_TEST_CASE( init )
 {
 
