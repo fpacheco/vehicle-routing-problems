@@ -75,6 +75,9 @@ public:
     void setReveWeight(UID rvWeight) { mReveWeight = rvWeight; }
     UID reveWeight () const { return mReveWeight; }
 
+    void setName(std::string name) { mName = name; }
+    std::string name () const { return mName; }
+
     void setNameId(UID nameId) { mNameId = nameId; }
     UID nameId () const { return mNameId; }
 
@@ -88,6 +91,9 @@ public:
     }
     Point afterPNode () const { return mAfterPNode; }
 
+    void setBearing(double bearing) { mBearing = bearing; }
+    UID bearing () const { return mBearing; }
+
     bool inSameStreet(const PhantomNode &other);
 
     PhantomNode& operator= ( const PhantomNode &other );
@@ -99,9 +105,11 @@ private:
     UID mReveNodeId;        ///< OSRM reverse node id
     UID mForwWeight;        ///< OSRM forward weight
     UID mReveWeight;        ///< OSRM reverse weight
-    UID mNameId;            ///< OSRM name id
+    std::string mName;       ///< OSRM street name
+    UID mNameId;            ///< OSRM street name id
     Point mBeforePNode;     ///< Longitude and latitude of point before phantom node
     Point mAfterPNode;      ///< Longitude and latitude of point after phantom node
+    double mBearing;        ///< Aproximate bearing for the edge
 };
 
 inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
