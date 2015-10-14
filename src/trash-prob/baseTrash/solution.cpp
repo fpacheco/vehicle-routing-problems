@@ -175,12 +175,6 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
     ssll << std::fixed << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x() << std::endl;
 
     for ( UINT j = 0; j < fleet[i].size(); ++j ) {
-      hasPNode = twc->getTWPhantomNodeForNId( fleet[i][j].nid(), twc->PhantomNodeType::pnBefore, twn);
-      if ( hasPNode ) {
-          ss << std::fixed << "&loc=" << twn.y() << "," << twn.x();
-          //
-          ssll << std::fixed << twn.y() << "," << twn.x() << std::endl;
-      }
       ss << std::fixed << "&loc=" << fleet[i][j].y() << "," << fleet[i][j].x();
       //
       ssll << std::fixed << fleet[i][j].y() << "," << fleet[i][j].x() << std::endl;
@@ -210,23 +204,6 @@ void Solution::dumpSolutionForPg () const
   UINT count;
   results = getSolutionForPg( count ) ;
 
-  /*
-  std::cout <<"\tseq:" <<
-            "\tVID:" <<
-            "\tnid" <<
-            "\tntype" <<
-            "\tdeltaTime" <<
-            "\tcargo" << std::endl;
-  for (UINT i = 0; i < count; i++)
-    std::cout << i <<
-              "\t" << results[i].seq <<
-              "\t" << results[i].vid <<
-              "\t" << results[i].nid <<
-              "\t" << results[i].ntype <<
-              "\t" << results[i].deltatime <<
-              "\t" << results[i].cargo << std::endl;
-  */
-
   std::cout.precision(6);
   std::cout.setf( std::ios::fixed, std:: ios::floatfield );
 
@@ -245,35 +222,10 @@ void Solution::dumpSolutionForPg () const
               "\tdCargo" << std::endl;
 
     seq++;
-    std::cout <<
-               seq <<
-              "\t" << fleet[i].getVid() <<
-              "\t" << fleet[i][0].id() <<
-              "\t" << fleet[i][0].type() <<
-              "\t"  << fleet[i][0].x() <<
-              "\t"  << fleet[i][0].y() <<
-              "\t"  << fleet[i][0].departureTime() <<
-              "\t"  << fleet[i][0].deltaTime() <<
-              "\t" << fleet[i][0].demand() << std::endl;
 
-    for ( UINT j = 1; j < fleet[i].size(); ++j ) {
+    for ( UINT j = 0; j < fleet[i].size(); ++j ) {
       seq++;
 
-      Twnode twn;
-      bool hasPNode = twc->getTWPhantomNodeForNId( fleet[i][j].nid(), twc->PhantomNodeType::pnBefore, twn);
-
-      if ( hasPNode ) {
-          std::cout <<
-                     seq <<
-                    "\t" << fleet[i].getVid() <<
-                    "\t" << twn.id() <<
-                    "\t" << twn.type() <<
-                    "\t" << twn.x() <<
-                    "\t" << twn.y() <<
-                    "\t" << fleet[i][j].departureTime() <<
-                    "\t" << 0 <<
-                    "\t" << 0 << std::endl;
-      }
       std::cout <<
                      seq <<
                     "\t" << fleet[i].getVid() <<
@@ -285,7 +237,9 @@ void Solution::dumpSolutionForPg () const
                     "\t" << fleet[i][j].deltaTime() <<
                     "\t" << fleet[i][j].demand() << std::endl;
     }
+
     seq++;
+
     std::cout <<
               seq  <<
               "\t" << fleet[i].getVid() <<
@@ -297,6 +251,7 @@ void Solution::dumpSolutionForPg () const
               "\t" <<  fleet[i].getDumpSite().deltaTime() <<
               "\t" << fleet[i].getDumpSite().demand() << std::endl;
     seq++;
+
     std::cout <<
               seq  <<
               "\t" << fleet[i].getVid() <<
