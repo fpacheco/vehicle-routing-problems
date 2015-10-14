@@ -1325,7 +1325,6 @@ void getNodesOnPath (
       // double distToDump = streetNodes[i].distanceToSquared( dumpSite );
 
       if ( pos > 0 ) {
-        /*
         // Steve recomendations!
         // check if segment of the street is 2 way and Node is in the right side
         oldStateOsrm = osrmi->getUse();
@@ -1349,11 +1348,12 @@ void getNodesOnPath (
           seg.push_back( p );
         }
       }
-      */
+        /*
         // found one on the segment so save it so we can order them
         std::pair< double, unsigned int > p( pos, i );
         seg.push_back( p );
       }
+      */
     }
 
     // sort the seg container based on pos to order them
