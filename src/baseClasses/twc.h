@@ -21,7 +21,7 @@
 #include <vector>
 #include <deque>
 #include <map>
- #include <cmath>
+#include <cmath>
 #include <algorithm>
 #include <utility>
 // #include <math.h>
@@ -999,7 +999,18 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   std::deque< double > times;
   if (!osrmi->getOsrmTimes(times)){
     #ifdef VRPMINTRACE
-         DLOG(INFO) << "getOsrmTimes failed";
+
+      std::stringstream ss;
+      ss << "http://localhost:5000/viaroute?";
+
+      DLOG(INFO) << "getOsrmTimes failed";
+      DLOG(INFO) << "\tNID\tID\tBEARING\t";
+      for (unsigned int i = 0; i < call.size(); ++i) {
+          DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << bearings[i] << "\t";
+          ss << "loc=" << call[i].y() << "," << call[i].x() << "&b=" << static_cast<int>(bearings[i]) << "&";
+      }
+
+      DLOG(INFO) << ss.str();
     #endif
     osrmi->useOsrm(oldStateOsrm);
     return;
@@ -1109,6 +1120,7 @@ void getNodesOnPath (
       DLOG(INFO) << "started getNodesOnPath";
   #endif
 
+  /*
   #ifdef VRPMINTRACE
       truck.dump("truck");
   #endif
@@ -1116,6 +1128,7 @@ void getNodesOnPath (
   #ifdef VRPMINTRACE
       unassigned.dump("unassigned");
   #endif
+  */
 
 #ifndef OSRMCLIENT
   DLOG(INFO) << "NO OSRM";
@@ -1221,15 +1234,26 @@ void getNodesOnPath (
   }
 
 
+
+#ifdef VRPMINTRACE
+  std::stringstream ss;
+#endif
+
   TwBucket<knode> streetNodes;
+
   for (unsigned int i = 0; i < unassigned.size(); ++i) {
     if (streetIDs.find(unassigned[i].streetId()) != streetIDs.end()) {
         #ifdef VRPMINTRACE
-            DLOG(INFO) << "Posible on route inserting: " << unassigned[i].id();
+            ss << unassigned[i].id() << "\t";
         #endif
         streetNodes.push_back(unassigned[i]);
     }
   }
+
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "Posibles nodes on route inserting: " << ss.str();
+#endif
+
 #ifdef VRPMAXTRACE
   DLOG(INFO) << "StreetNodes.size" << streetNodes.size();
   streetNodes.dump("streetNodes");
@@ -1298,6 +1322,7 @@ void getNodesOnPath (
       // double distToDump = streetNodes[i].distanceToSquared( dumpSite );
 
       if ( pos > 0 ) {
+        /*
         // Steve recomendations!
         // check if segment of the street is 2 way and Node is in the right side
         oldStateOsrm = osrmi->getUse();
@@ -1320,6 +1345,11 @@ void getNodesOnPath (
           std::pair< double, unsigned int > p( pos, i );
           seg.push_back( p );
         }
+      }
+      */
+        // found one on the segment so save it so we can order them
+        std::pair< double, unsigned int > p( pos, i );
+        seg.push_back( p );
       }
     }
 
@@ -2131,6 +2161,9 @@ bool setTravelingTimesInsertingOneNode(
 
 #ifdef OSRMCLIENT
   void setTravelTimeOsrm(UID from, UID to) const {
+
+    DLOG(INFO) << "started setTravelTimeOsrm";
+
     assert(from < original.size() && to < original.size());
     double time;
     if (!osrmi->getConnection()) {
@@ -2143,27 +2176,29 @@ bool setTravelingTimesInsertingOneNode(
     osrmi->clear();
 
     // Add nodes
-    std::deque< Twnode> call;
-    // First node
-    call.push_back(original[from]);
-    // After node?
-    auto it = mPhantomNodes.find( original[from].nid() );
-    if ( it!=mPhantomNodes.end() ) {
-      Twnode an = Twnode(mIPNId,mPNId,it->second.afterPNode().x(),it->second.afterPNode().y());
-      an.set_type( Twnode::kPhantomNode );
-      call.push_back(an);
-    }
-    // Before node?
-    it = mPhantomNodes.find( original[to].nid() );
-    if ( it!=mPhantomNodes.end() ) {
-      Twnode bn = Twnode(mIPNId,mPNId,it->second.beforePNode().x(),it->second.beforePNode().y());
-      bn.set_type( Twnode::kPhantomNode );
-      call.push_back(bn);
-    }
-    // Last node
-    call.push_back(original[to]);
+    std::vector< Twnode> call;
+    std::vector< double> bearings;
+    double bearing;
 
-    osrmi->addViaPoints(call);
+    if ( getBearingForNId(original[from].nid(), bearing) ) {
+      bearings.push_back(bearing);
+      call.push_back(original[from].nid());
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << original[from].nid() << "(" << original[from].id() << ") have no bearing!";
+#endif
+    }
+
+    if ( getBearingForNId(original[to].nid(), bearing) ) {
+      bearings.push_back(bearing);
+      call.push_back(original[to].nid());
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << original[to].nid() << "(" << original[to].id() << ") have no bearing!";
+#endif
+    }
+
+    osrmi->addViaPoints(call,bearings);
 
     if (!osrmi->getOsrmViaroute()) {
        DLOG(INFO) << "getOsrmViaroute failed";
@@ -2186,6 +2221,9 @@ bool setTravelingTimesInsertingOneNode(
       DLOG(INFO) << "travel_Time[" << from << "][" << to << "]=" << time;
     #endif
     setTwcij(from, to);
+
+    DLOG(INFO) << "ended setTravelTimeOsrm";
+
   }
 #endif
 
@@ -3346,8 +3384,8 @@ private:
         Timer timer;
     #endif  //DOSTATS
 
-    #ifdef VRPMAXTRACE
-        DLOG(INFO) << "getAllHintsAndStreets\n";
+    #ifdef VRPMINTRACE
+        DLOG(INFO) << "started getAllHintsAndStreets\n";
     #endif
 
     std::deque<std::string> hints;
