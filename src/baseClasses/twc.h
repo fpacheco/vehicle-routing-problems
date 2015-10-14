@@ -1002,6 +1002,7 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
 
       std::stringstream ss;
       ss.precision(6);
+      ss << std::fixed;
 
       ss << "http://localhost:5000/viaroute?";
 
