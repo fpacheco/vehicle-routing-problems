@@ -1001,6 +1001,8 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
     #ifdef VRPMINTRACE
 
       std::stringstream ss;
+      ss.precision(6);
+
       ss << "http://localhost:5000/viaroute?";
 
       DLOG(INFO) << "getOsrmTimes failed";
@@ -1009,8 +1011,8 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
           DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << bearings[i] << "\t";
           ss << "loc=" << call[i].y() << "," << call[i].x() << "&b=" << static_cast<int>(bearings[i]) << "&";
       }
-
-      DLOG(INFO) << ss.str();
+      std::string s = ss.str();
+      DLOG(INFO) << s.substr(0, s.size()-1);
     #endif
     osrmi->useOsrm(oldStateOsrm);
     return;
@@ -1468,6 +1470,7 @@ bool setTravelingTimesOfRoute(
 
   bool oldStateOsrm = osrmi->getUse();
   osrmi->useOsrm(true);  //forcing osrm usage
+  osrmi->clear();
 
   // To build the call
   unsigned int tSize = truck.size();
@@ -1637,6 +1640,7 @@ bool setTravelingTimesInsertingOneNode(
 
   bool oldStateOsrm = osrmi->getUse();
   osrmi->useOsrm(true);  //forcing osrm usage
+  osrmi->clear();
 
   if (truck.size() == 1) {
      TravelTime(truck[0], node, dumpSite);
