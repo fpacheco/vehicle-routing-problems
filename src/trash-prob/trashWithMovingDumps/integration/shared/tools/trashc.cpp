@@ -19,22 +19,7 @@ std::string base;
 std::vector<std::string> dataFiles;
 
 
-// tests/test001 --base ../tests/InputFiles/ rivera
-
-/*
-int main(int argc, char **argv)
-{
-    std::string fileDir = "../tests/InputFiles/";
-    VRPTools vrp;
-    std::cout << "OSRM checkOsrmClient: " << vrp.checkOsrmClient() << std::endl;
-    std::cout << "OSRM available: " << vrp.osrmAvailable() << std::endl;
-    vrp.readDataFromFiles(fileDir + "rivera");
-    //vrp.readDataFromFiles(fileDir + "a_du_rm_cl_08");
-    //std::cout << "OSRM check: " << vrp.check() << std::endl;
-    vrp.solve();
-    return 0;
-}
-*/
+// tools/trashc --base ../tests/InputFiles/ rivera
 
 void to_cout(const std::vector<std::string> &v)
 {
