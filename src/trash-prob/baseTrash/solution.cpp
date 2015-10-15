@@ -165,27 +165,63 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
 
     std::stringstream ss;
     std::stringstream ssll;
+    double bearing;
 
     ss.precision(6);
     ssll.precision(6);
 
     ss << urlBase;
-    ss << std::fixed << "loc=" << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x();
-    //
-    ssll << std::fixed << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x() << std::endl;
+
+    if ( twc->getBearingForNId(fleet[i].getStartingSite().nid(), bearing) ) {
+        ss << std::fixed << "loc=" << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x()
+           << "&b=" << static_cast<int>(bearing);
+        //
+        ssll << std::fixed << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x()
+             << "," << static_cast<int>(bearing) << std::endl;
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << fleet[i].getStartingSite().nid() << "(" << fleet[i].getStartingSite().id() << ") have no bearing!";
+#endif
+    }
 
     for ( UINT j = 0; j < fleet[i].size(); ++j ) {
-      ss << std::fixed << "&loc=" << fleet[i][j].y() << "," << fleet[i][j].x();
-      //
-      ssll << std::fixed << fleet[i][j].y() << "," << fleet[i][j].x() << std::endl;
-    }
-    ss << "&loc=" << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x();
-    //
-    ssll << std::fixed << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x() << std::endl;
 
-    ss << std::fixed << "&loc=" << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x();
-    //
-    ssll << std::fixed << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x() << std::endl;
+        if ( twc->getBearingForNId(fleet[i][j].nid(), bearing) ) {
+          ss << std::fixed << "&loc=" << fleet[i][j].y() << "," << fleet[i][j].x()
+                  << "&b=" << static_cast<int>(bearing);
+          //
+          ssll << std::fixed << fleet[i][j].y() << "," << fleet[i][j].x()
+               << "," << static_cast<int>(bearing) << std::endl;
+        } else {
+    #ifdef VRPMINTRACE
+          DLOG(INFO) << "Error: Node " << fleet[i][j].nid() << "(" << fleet[i][j].id() << ") have no bearing!";
+    #endif
+        }
+    }
+
+    if ( twc->getBearingForNId(fleet[i].getDumpSite().nid(), bearing) ) {
+        ss << "&loc=" << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x()
+              << "&b=" << static_cast<int>(bearing);
+        //
+        ssll << std::fixed << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x()
+             << "," << static_cast<int>(bearing) << std::endl;
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << fleet[i].getDumpSite().nid() << "(" << fleet[i].getDumpSite().id() << ") have no bearing!";
+#endif
+    }
+
+    if ( twc->getBearingForNId(fleet[i].getEndingSite().nid(), bearing) ) {
+        ss << std::fixed << "&loc=" << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x()
+           << "&b=" << static_cast<int>(bearing);
+        //
+        ssll << std::fixed << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x()
+             << "," << static_cast<int>(bearing) << std::endl;
+    } else {
+#ifdef VRPMINTRACE
+      DLOG(INFO) << "Error: Node " << fleet[i].getEndingSite().nid() << "(" << fleet[i].getEndingSite().id() << ") have no bearing!";
+#endif
+    }
 
     std::cout << ss.str() << std::endl;
     urls.push_back(ss.str());

@@ -852,7 +852,8 @@ void fill_travel_time_onTrip_work(std::set<id_time, CompareSecond< id_time > >  
       double p_tim = process_order.begin()->second;
       #ifdef VRPMINTRACE
         if ((process_order.size() % 200) == 0)
-          DLOG(INFO) << "fill_travel_time_onTrip " << i << " size " << process_order.size() << " working with " << original[i].id() << "," << original[j].id()
+          DLOG(INFO) << "fill_travel_time_onTrip " << i << " size " << process_order.size()
+                   << " working with " << original[i].id() << "," << original[j].id()
                    << " onTrip time" << travel_time_onTrip[i][j]
                    << " on data time" << travel_Time[i][j]
                    << " onTrip time" << travel_time_onTrip[j][i]
@@ -884,9 +885,10 @@ void fill_travel_time_onTrip_work(std::set<id_time, CompareSecond< id_time > >  
       }
     DLOG(INFO) << "total times values got: " << count;
     #endif
-  #ifdef VRPMINTRACE
+
+#ifdef VRPMINTRACE
     DLOG(INFO) << "end fill_travel_time_onTrip_work";
-  #endif
+#endif
   return;
 }
 
@@ -1150,9 +1152,10 @@ void getNodesOnPath (
   std::vector< Twnode > call;
   std::vector< double > bearings;
 
+  double bearing;
+
   // Add nodes and bearings to data containers
   for (unsigned int i = 0; i < truck.size(); ++i) {
-    double bearing;
     if ( getBearingForNId(truck[i].nid(), bearing) ) {
       bearings.push_back(bearing);
       call.push_back(truck[i]);
@@ -1164,7 +1167,6 @@ void getNodesOnPath (
   }
 
   // Add dumpsite
-  double bearing;
   if ( getBearingForNId(dumpSite.nid(), bearing) ) {
     bearings.push_back(bearing);
     call.push_back(dumpSite);
@@ -1194,7 +1196,6 @@ void getNodesOnPath (
     return;
   }
 
-
   std::deque< Node > geometry;
   if (!osrmi->getOsrmGeometry(geometry) ) {
     #ifdef VRPMINTRACE
@@ -1219,8 +1220,8 @@ void getNodesOnPath (
 
 
 
-  std::set < int >::const_iterator streetsPtr;
 #ifdef VRPMAXTRACE
+  std::set < int >::const_iterator streetsPtr;
   DLOG(INFO) << "streetIDs.size" << streetIDs.size();
   int count =0;
   for (streetsPtr = streetIDs.begin();
@@ -1564,6 +1565,7 @@ bool setTravelingTimesOfRoute(
     #endif
   }
 
+/*
 #if 0
   // extract triplets and store in table
   #ifdef VRPMAXTRACE
@@ -1596,8 +1598,14 @@ bool setTravelingTimesOfRoute(
     #endif
   }
 #endif
+*/
   osrmi->useOsrm(oldStateOsrm);
 #endif  // with OSRMCLIENT
+
+#ifdef VRPMINTRACE
+  DLOG(INFO) << "ended setTravelingTimesOfRoute";
+#endif
+
 }
 
 /*!
@@ -3207,13 +3215,17 @@ private:
    * \return The average travel time from start to destination.
    */
   double getAverageTime(const knode &from, const Bucket &to) const {
-    DLOG(INFO) << "getAverageTime from" << from.nid();
+
+    DLOG(INFO) << "started getAverageTime";
+    DLOG(INFO) << "from (nid=" << from.nid() << ")";
+
     assert(from.nid() < original.size());
     double time = 0;
     int j = from.nid();
     int count = to.size();
 
     for (int i = 0; i < to.size(); i++) {
+      // Por que ponerle 1???????
       if (TravelTime(j, to[i].nid()) < 0) {
         DLOG(INFO) << "found a negative";
         travel_Time[j][to[i].nid()] = 1;
@@ -3225,13 +3237,11 @@ private:
     }
     time = time / count;
     DLOG(INFO) << "time = " << time;
+
+    DLOG(INFO) << "ended getAverageTime";
+
     return time;
   }
-
-
-
-
-
 
 
   /*!
