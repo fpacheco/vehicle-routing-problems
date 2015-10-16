@@ -15,6 +15,7 @@ class LoadFromFiles {
     otherloc_t *getOtherlocs(unsigned int &otherloc_count);
     vehicle_t *getVehicles(unsigned int &vehicle_count);
     ttime_t *getTtimes(unsigned int &ttime_count);
+
     void load_containers( std::string infile );
     void load_otherlocs( std::string infile );
     void load_vehicles( std::string infile );
