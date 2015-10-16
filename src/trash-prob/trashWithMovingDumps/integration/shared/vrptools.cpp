@@ -250,7 +250,7 @@ void VRPTools::solve()
     }
 }
 
-void createTimeMatrix() {
+void VRPTools::createTimeMatrix(std::string fileBasePath) {
 
   // .containers.txt .otherlocs.txt .vehicles.txt .dmatrix-time.txt
   LoadFromFiles loader(fileBasePath);
@@ -267,8 +267,8 @@ void createTimeMatrix() {
   mPhantomNodes.clear();
   #ifdef VRPMINTRACE
     DLOG(INFO) << "mPhantonNodes cleared!";
-    DLOG(INFO) << "Containers have " << mContainers.size() << " elements!";
-    DLOG(INFO) << "Otherlocs have " << mOtherLocs.size() << " elements!";
+    DLOG(INFO) << "Containers have " << mContainersCount << " elements!";
+    DLOG(INFO) << "Otherlocs have " << mOtherLocsCount << " elements!";
   #endif
 
   // Variables
@@ -288,14 +288,17 @@ void createTimeMatrix() {
   int pncount;
   pncount = 0;
   TwBucket <knode> nodesOnPath;
+
+  std::stringstream ss;
+  bool errorBearing = false;
   // All nodes must have bearing (pickups, dumps, etc)
-  for (UINT i = 0; i < mContainers.size(); i++) {
+  for (UINT i = 0; i < mContainersCount; i++) {
     // Only picukp has phantom nodes (OBSOLETE!)
-    // if ( mContainers[i].isPickup() )
+    // if ( mContainers[i]->isPickup() )
     one_way = 100;
 
     // Custom/modified version of nearest plugin
-    osrmi->getOsrmNearest( mContainers[i].x(), mContainers[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+    osrmi->getOsrmNearest( mContainers[i]->x(), mContainers[i]->x(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
 
     // Get nearest fisical OSRM node (edge intersection) of phantom
     osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
@@ -303,30 +306,39 @@ void createTimeMatrix() {
     // Bearing calculation
     Node phyNode = Node(phyNLon,phyNLat);
     Node phaNode = Node(phaNLon,phaNLat);
-    bool ret = mContainers[i].isRightToSegment(phyNode, phaNode);
+    bool ret = mContainers[i]->isRightToSegment(phyNode, phaNode);
     double bearing;
     if (ret) {
       bearing = phyNode.bearing(phaNode, false);
     } else {
       bearing = phyNode.bearing(phaNode, true);
     }
-    //typnode=pickup,id,x,y
-    twn = Twnode(1, mContainers[i].id, mContainers[i].x(), mContainers[i].y() );
 
-    // Set twn bearing
-    twn.setBearing(bearing);
+    //typnode=pickup,id,x,y
+    twn = Twnode(mContainers[i]->nid(), mContainers[i]->id(), mContainers[i]->x(), mContainers[i]->x() );
+    BearingNodeInfo_t nodeinfo;
+    nodeinfo->forward_node_id = fw_id;
+    nodeinfo->reverse_node_id = rv_id,;
+    nodeinfo->bearing = bearing;
+    BearingNodes[ mContainers[i].nid() ] = nodeinfo;
 
     nodesOnPath.push_back(twn);
+    if(fw_id==0||rv_id==0)
+    {
+      errorBearing = true;
+      ss.precision(6);
+      ss << "NID" << mContainers[i].nid() << "\tFWID" << fw_id <<"\tRVID" << rv_id << "\t" << bearing;
+    }
   }
 
   // the same loop for otherlocs
-  for (UINT i = 0; i < mOtherLocs.size(); i++) {
+  for (UINT i = 0; i < mOtherLocsCount; i++) {
     // Only picukp has phantom nodes (OBSOLETE!)
-    // if ( mOtherLocs[i].isPickup() )
+    // if ( mOtherLocs[i]->isPickup() )
     one_way = 100;
 
     // Custom/modified version of nearest plugin
-    osrmi->getOsrmNearest( mOtherLocs[i].x(), mOtherLocs[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+    osrmi->getOsrmNearest( mOtherLocs[i]->x(), mOtherLocs[i]->y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
 
     // Get nearest fisical OSRM node (edge intersection) of phantom
     osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
@@ -334,7 +346,7 @@ void createTimeMatrix() {
     // Bearing calculation
     Node phyNode = Node(phyNLon,phyNLat);
     Node phaNode = Node(phaNLon,phaNLat);
-    bool ret = mOtherLocs[i].isRightToSegment(phyNode, phaNode);
+    bool ret = mOtherLocs[i]->isRightToSegment(phyNode, phaNode);
     double bearing;
     if (ret) {
       bearing = phyNode.bearing(phaNode, false);
@@ -342,13 +354,27 @@ void createTimeMatrix() {
       bearing = phyNode.bearing(phaNode, true);
     }
     //typnode=pickup,id,x,y
-    twn = Twnode(1, mOtherLocs[i].id, mOtherLocs[i].x(), mOtherLocs[i].y() );
-
-    // Set twn bearing
-    twn.setBearing(bearing);
+    twn = Twnode(1, mOtherLocs[i]->id, mOtherLocs[i]->x(), mOtherLocs[i]->y() );
+    //typnode=pickup,id,x,y
+    twn = Twnode(mOtherLocs[i]->nid(), mOtherLocs[i]->id(), mOtherLocs[i]->x(), mOtherLocs[i]->x() );
+    BearingNodeInfo_t nodeinfo;
+    nodeinfo->forward_node_id = fw_id;
+    nodeinfo->reverse_node_id = rv_id;
+    nodeinfo->bearing = bearing;
+    BearingNodes[ mOtherLocs[i].nid() ] = nodeinfo;
 
     nodesOnPath.push_back(twn);
+    if(fw_id==0||rv_id==0)
+    {
+      errorBearing = true;
+      ss.precision(6);
+      ss << "NID" << mOtherLocs[i].nid() << "\tFWID" << fw_id <<"\tRVID" << rv_id << "\t" << bearing;
+    }
   }
+    if(errorBearing)
+    {
+      std::string s = ss.str();
+    }
     //get all the times using osrm
     bool oldStateOsrm = osrmi->getUse();
     osrmi->useOsrm(true);  //forcing osrm usage
@@ -360,15 +386,19 @@ void createTimeMatrix() {
 
     // Add nodes and bearings to data containers
     for (unsigned int i = 0; i < nodesOnPath.size(); ++i) {
-        double bearing;
-        if ( getBearingForNId(nodesOnPath[i].nid(), bearing) ) {
-          bearings.push_back(bearing);
+        double bearingi;
+        auto it = BearingNodes.find( nodesOnPath[i]->nid );
+        if ( it!=BearingNodes.end() ) {
+          bearingi = it->second.bearing();
+          bearings.push_back(bearingi);
           call.push_back(nodesOnPath[i]);
           for (unsigned int j = 0; j < nodesOnPath.size(); ++j) {
             if(i!=j)
             {
               double bearingj;
-              if ( getBearingForNId(nodesOnPath[j].nid(), bearing) ) {
+              auto it = BearingNodes.find( nodesOnPath[j]->nid );
+              if ( it!=BearingNodes.end() ) {
+                bearingj = it->second.bearing();
                 bearings.push_back(bearingj);
                 call.push_back(nodesOnPath[j]);
 
