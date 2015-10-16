@@ -110,11 +110,16 @@ find_package(Threads REQUIRED)
 # Office
 set(OSRM_SOURCE_PATH "/disco_local/fpacheco/idm/right-side/osrm-backend")
 # Home
+<<<<<<< HEAD
+#set(OSRM_SOURCE_PATH "/home/fpacheco/workspace/idm/right-side/osrm-backend")
+=======
 # set(OSRM_SOURCE_PATH "/home/fpacheco/workspace/idm/right-side/osrm-backend")
+>>>>>>> 68e945fbe7d0fd852e0e3ac1537d48759a0189bd
 #set(OSRM_INCLUDE_DIRS ${OSRM_SOURCE_PATH}/build/libOSRM.a)
-#set(OSRM_SOURCE_PATH "/usr/local")
-set(OSRM_LIBRARIES ${OSRM_SOURCE_PATH}/build/libOSRM.a)
-#set(OSRM_LIBRARIES ${OSRM_SOURCE_PATH}/lib/libOSRM.a)
+set(OSRM_INCLUDE_DIRS ${OSRM_SOURCE_PATH}/lib/libOSRM.a)
+set(OSRM_SOURCE_PATH "/usr/local")
+#set(OSRM_LIBRARIES ${OSRM_SOURCE_PATH}/build/libOSRM.a)
+set(OSRM_LIBRARIES ${OSRM_SOURCE_PATH}/lib/libOSRM.a)
 ##
 
 ## Glog
