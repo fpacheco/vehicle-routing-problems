@@ -169,7 +169,12 @@ void OsrmClient::addViaPoint( double lat, double lon, double bearing )
   FixedPointCoordinate p( lat * COORDINATE_PRECISION,
                           lon * COORDINATE_PRECISION );
   route_parameters.coordinates.push_back( p );
-  route_parameters.bearings.push_back( static_cast<int>(bearing) );
+  // Bearing -> 0 to 359
+  int bear = static_cast<int>(bearing);
+  if (bear==360) {
+    bear=0;
+  }
+  route_parameters.bearings.push_back( bear );
 #ifdef DOSTATS
   STATS->addto( "OsrmClient::addViaPoint Cumulative time", timer.duration() );
 #endif
