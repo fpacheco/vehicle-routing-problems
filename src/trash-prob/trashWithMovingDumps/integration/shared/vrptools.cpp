@@ -249,3 +249,177 @@ void VRPTools::solve()
 
     }
 }
+
+void createTimeMatrix() {
+
+  // .containers.txt .otherlocs.txt .vehicles.txt .dmatrix-time.txt
+  LoadFromFiles loader(fileBasePath);
+  mContainers = loader.getContainers(mContainersCount);
+  mOtherLocs = loader.getOtherlocs(mOtherLocsCount);
+  #ifdef VRPMINTRACE
+    DLOG(INFO) << "mContainersCount: " << mContainersCount;
+    DLOG(INFO) << "mOtherLocsCount: " << mOtherLocsCount;
+  #endif
+  // Multiplier for before and after
+  double mb = 0.70;
+  double ma = 1.30;
+  // Delete previous
+  mPhantomNodes.clear();
+  #ifdef VRPMINTRACE
+    DLOG(INFO) << "mPhantonNodes cleared!";
+    DLOG(INFO) << "Containers have " << mContainers.size() << " elements!";
+    DLOG(INFO) << "Otherlocs have " << mOtherLocs.size() << " elements!";
+  #endif
+
+  // Variables
+  bool oldStateOsrm;
+  // PhantomNode
+  double phaNLon, phaNLat;
+  // Physical Node
+  double phyNLon, phyNLat;
+  unsigned int one_way;
+  unsigned int fw_id, rv_id, fw_wt, rv_wt, street_id;
+
+  // Backup OSRM state
+  oldStateOsrm = osrmi->getUse();
+  osrmi->useOsrm(true);  //forcing osrm usage
+  osrmi->clear();
+
+  int pncount;
+  pncount = 0;
+  TwBucket <knode> nodesOnPath;
+  // All nodes must have bearing (pickups, dumps, etc)
+  for (UINT i = 0; i < mContainers.size(); i++) {
+    // Only picukp has phantom nodes (OBSOLETE!)
+    // if ( mContainers[i].isPickup() )
+    one_way = 100;
+
+    // Custom/modified version of nearest plugin
+    osrmi->getOsrmNearest( mContainers[i].x(), mContainers[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+
+    // Get nearest fisical OSRM node (edge intersection) of phantom
+    osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
+
+    // Bearing calculation
+    Node phyNode = Node(phyNLon,phyNLat);
+    Node phaNode = Node(phaNLon,phaNLat);
+    bool ret = mContainers[i].isRightToSegment(phyNode, phaNode);
+    double bearing;
+    if (ret) {
+      bearing = phyNode.bearing(phaNode, false);
+    } else {
+      bearing = phyNode.bearing(phaNode, true);
+    }
+    //typnode=pickup,id,x,y
+    twn = Twnode(1, mContainers[i].id, mContainers[i].x(), mContainers[i].y() );
+
+    // Set twn bearing
+    twn.setBearing(bearing);
+
+    nodesOnPath.push_back(twn);
+  }
+
+  // the same loop for otherlocs
+  for (UINT i = 0; i < mOtherLocs.size(); i++) {
+    // Only picukp has phantom nodes (OBSOLETE!)
+    // if ( mOtherLocs[i].isPickup() )
+    one_way = 100;
+
+    // Custom/modified version of nearest plugin
+    osrmi->getOsrmNearest( mOtherLocs[i].x(), mOtherLocs[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+
+    // Get nearest fisical OSRM node (edge intersection) of phantom
+    osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
+
+    // Bearing calculation
+    Node phyNode = Node(phyNLon,phyNLat);
+    Node phaNode = Node(phaNLon,phaNLat);
+    bool ret = mOtherLocs[i].isRightToSegment(phyNode, phaNode);
+    double bearing;
+    if (ret) {
+      bearing = phyNode.bearing(phaNode, false);
+    } else {
+      bearing = phyNode.bearing(phaNode, true);
+    }
+    //typnode=pickup,id,x,y
+    twn = Twnode(1, mOtherLocs[i].id, mOtherLocs[i].x(), mOtherLocs[i].y() );
+
+    // Set twn bearing
+    twn.setBearing(bearing);
+
+    nodesOnPath.push_back(twn);
+  }
+    //get all the times using osrm
+    bool oldStateOsrm = osrmi->getUse();
+    osrmi->useOsrm(true);  //forcing osrm usage
+    osrmi->clear();
+
+    // To build the call
+    std::vector< Twnode > call;
+    std::vector< double > bearings;
+
+    // Add nodes and bearings to data containers
+    for (unsigned int i = 0; i < nodesOnPath.size(); ++i) {
+        double bearing;
+        if ( getBearingForNId(nodesOnPath[i].nid(), bearing) ) {
+          bearings.push_back(bearing);
+          call.push_back(nodesOnPath[i]);
+          for (unsigned int j = 0; j < nodesOnPath.size(); ++j) {
+            if(i!=j)
+            {
+              double bearingj;
+              if ( getBearingForNId(nodesOnPath[j].nid(), bearing) ) {
+                bearings.push_back(bearingj);
+                call.push_back(nodesOnPath[j]);
+
+                // Add point to the call
+                osrmi->addViaPoints(call, bearings);
+                if (!osrmi->getOsrmViaroute()) {
+                  #ifdef VRPMINTRACE
+                      DLOG(INFO) << "getOsrmViaroute failed";
+                  #endif
+                  osrmi->useOsrm(oldStateOsrm);
+                  return;
+                }
+                // To store time returned
+                double time; //usar time , tiempo total
+                if (!osrmi->getOsrmTime( nodesOnPath[i].x(), nodesOnPath[i].y() , nodesOnPath[j].x(),
+                                              nodesOnPath[j].y(),time)){
+                  #ifdef VRPMINTRACE
+
+                    std::stringstream ss;
+                    ss.precision(6);
+                    ss << std::fixed;
+
+                    ss << "http://localhost:5000/viaroute?";
+
+                    DLOG(INFO) << "getOsrmTimes failed";
+                    DLOG(INFO) << "\tNID\tID\tBEARING\t";
+                    for (unsigned int i = 0; i < call.size(); ++i) {
+                        DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << bearings[i] << "\t";
+                        ss << "loc=" << call[i].y() << "," << call[i].x() << "&b=" << static_cast<int>(bearings[i]) << "&";
+                    }
+                    std::string s = ss.str();
+                    DLOG(INFO) << s.substr(0, s.size()-1);
+                  #endif
+                  osrmi->useOsrm(oldStateOsrm);
+                  return;
+                }
+                else
+                 std::out << call[i].id() << "\t" << call[j].id() << "\t" << bearings << "\t"<< bearingsj << "\t" << time << "\t";
+              }
+              else {
+            #ifdef VRPMINTRACE
+                DLOG(INFO) << "Error: Node " << nodesOnPath[i].nid() << "(" << nodesOnPath[i].id() << ") have no bearing!";
+            #endif
+              }
+            }
+          }
+        } else {
+        #ifdef VRPMINTRACE
+            DLOG(INFO) << "Error: Node " << nodesOnPath[i].nid() << "(" << nodesOnPath[i].id() << ") have no bearing!";
+        #endif
+        }
+    }
+  }
+}
