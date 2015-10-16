@@ -1668,30 +1668,6 @@ bool setTravelingTimesInsertingOneNode(
   // NO clear????
   osrmi->clear();
 
-  /*
-  // special case  0 n 1
-  for (unsigned int i = 0; i < tSize; ++i) {
-    if ( getBearingForNId(truck[i].nid(), bearing) ) {
-      bearings.push_back(bearing);
-      call.push_back(truck[i]);
-    } else {
-#ifdef VRPMINTRACE
-      DLOG(INFO) << "Error: Node " << truck[i].nid() << "(" << truck[i].id() << ") have no bearing!";
-#endif
-    }
-  }
-
-  // Add dumpsite
-  if ( getBearingForNId(dumpSite.nid(), bearing) ) {
-    bearings.push_back(bearing);
-    call.push_back(dumpSite);
-  } else {
-#ifdef VRPMINTRACE
-    DLOG(INFO) << "Error: Node " << dumpSite.nid() << "(" << dumpSite.id() << ") have no bearing!";
-#endif
-  }
-  */
-
   if ( getBearingForNId(truck[0].nid(), bearing) ) {
     bearings.push_back(bearing);
     call.push_back(truck[0]);

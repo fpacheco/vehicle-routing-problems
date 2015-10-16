@@ -99,6 +99,20 @@ bool VRPTools::readDataFromFiles(std::string fileBasePath)
 #endif
 }
 
+bool VRPTools::readContainersFromFile(std::string fileBasePath)
+{
+  LoadFromFiles loader = LoadFromFiles();
+  loader.load_containers(fileBasePath + ".containers.txt");
+  mContainers = loader.getContainers(mContainersCount);
+}
+
+bool VRPTools::readOtherLocsFromFile(std::string fileBasePath)
+{
+  LoadFromFiles loader = LoadFromFiles();
+  loader.load_otherlocs(fileBasePath + ".otherlocs.txt");
+  mOtherLocs = loader.getOtherlocs(mOtherLocsCount);
+}
+
 bool VRPTools::check()
 {
     if (mContainers && mOtherLocs && mTimeTable && mVehicles) {
