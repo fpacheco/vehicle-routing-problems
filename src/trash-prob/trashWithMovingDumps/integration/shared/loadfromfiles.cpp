@@ -3,6 +3,10 @@
 
 #include "loadfromfiles.h"
 
+LoadFromFiles::LoadFromFiles(){
+
+}
+
 LoadFromFiles::LoadFromFiles(std::string &filePrefix) {
     load_containers( filePrefix + ".containers.txt" );
     load_otherlocs( filePrefix + ".otherlocs.txt" );

@@ -25,7 +25,9 @@ set(VRPTOOLS_VERSION_STRING ${VRPTOOLS_VERSION_MAJOR}.${VRPTOOLS_VERSION_MINOR}.
 
 # Always
 option(OSRMCLIENT "Option description" ON)
+option(WITH_GDAL "Option description" ON)
 
+# Develop version
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
   message(STATUS "debug mode")
   option(DOVRPLOG "Option description" ON)
@@ -34,6 +36,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
   option(VRPMAXTRACE "Option description" OFF)
 ENDIF(CMAKE_BUILD_TYPE MATCHES Debug)
 
+# Production version
 IF(CMAKE_BUILD_TYPE MATCHES Release)
   message(STATUS "release mode")
   option(DOVRPLOG "Option description" ON)
@@ -65,6 +68,11 @@ endif()
 if(VRPMAXTRACE)
   add_definitions(-DVRPMAXTRACE)
 endif()
+
+if(WITH_GDAL)
+  add_definitions(-DWITH_GDAL)
+endif()
+
 
 include_directories(
     "../../../initTrash"
@@ -137,11 +145,18 @@ if(WIN32 AND CMAKE_BUILD_TYPE MATCHES Debug)
   set(TBB_LIBRARIES ${TBB_DEBUG_LIBRARIES})
 endif()
 
+if (WITH_GDAL)
+  find_package(GDAL REQUIRED)
+endif()
+
 ### Includes
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CURLPP_INCLUDE_DIRS})
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
 include_directories(${TBB_INCLUDE_DIR})
+if (WITH_GDAL)
+  include_directories(${GDAL_INCLUDE_DIR})
+endif()
 ###
 
 # base trash
@@ -239,13 +254,15 @@ set (SOLVERTRASH_INCLUDE_FILES
 # Append the source files here
 set (VRPTOOLS_SOURCES
   loadfromfiles.cpp
+  gdali.cpp
   vrptools.cpp
 )
 
 # Append the header files here. this will get copied to include directory
 set (VRPTOOLS_INCLUDE_FILES
-    loadfromfiles.h
-    vrptools.h
+  loadfromfiles.h
+  gdali.h
+  vrptools.h
 )
 
 #add_library(baseclasses OBJECT ${BASECLASSES_SOURCES} ${BASECLASSES_INCLUDE_FILES} )
@@ -273,6 +290,9 @@ target_link_libraries(
   ${CURLPP_LIBRARIES}
   ${TBB_LIBRARIES}
 )
+if (WITH_GDAL)
+  target_link_libraries( ${PROJECT_NAME} ${GDAL_LIBRARIES} )
+endif()
 
 
 enable_testing()

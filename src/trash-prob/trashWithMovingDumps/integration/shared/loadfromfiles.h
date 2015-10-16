@@ -1,3 +1,6 @@
+#ifndef LOADFROMFILES_H
+#define LOADFROMFILES_H
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -9,6 +12,7 @@
 class LoadFromFiles {
 
   public:
+    LoadFromFiles();
     LoadFromFiles( std::string &filePrefix );
 
     container_t *getContainers(unsigned int &container_count);
@@ -31,3 +35,5 @@ class LoadFromFiles {
     std::vector<vehicle_t> mVehicles;
     std::vector<ttime_t> mTimeTable;
 };  // end of class LoadFromFiles
+
+#endif

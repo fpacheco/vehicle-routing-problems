@@ -1,3 +1,6 @@
+#ifndef VRPTOOLS_H
+#define VRPTOOLS_H
+
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
@@ -90,6 +93,10 @@ public:
     bool checkOsrmClient();
     // Read all data from file
     bool readDataFromFiles(std::string fileBasePath);
+    // Read containers from file
+    bool readContainersFromFile(std::string fileBasePath);
+    // Read otherlocs from file
+    bool readOtherLocsFromFile(std::string fileBasePath);
     // Solve the problem
     bool check();
     // Solve the problem
@@ -97,12 +104,17 @@ public:
 
 private:
     // Apuntan al primer elemento del array. Cada elemento tiene la estructura.
-    container_t *mContainers; ///< Containers
-    unsigned int mContainersCount; ///< Number of containers
+    ///< Containers
+    container_t *mContainers;
+    ///< Number of containers
+    unsigned int mContainersCount;
+    ///< Other locs starting, ending
     otherloc_t *mOtherLocs;
     unsigned int mOtherLocsCount;
+    ///< Vehicles
     vehicle_t *mVehicles;
     unsigned int mVehiclesCount;
+    ///< Time table matrix
     ttime_t *mTimeTable;
     unsigned int mTimeTableCount;
 
@@ -115,3 +127,5 @@ private:
     fs::path mLogDir; ///< Logging directory path
     fs::path mLogFile; ///< Logging file name (not path)
 };
+
+#endif
