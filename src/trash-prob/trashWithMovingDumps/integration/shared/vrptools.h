@@ -107,6 +107,16 @@ public:
     // Solve the problem
     void solve();
 
+    void createTimeMatrix(std::string fileBasePath);
+
+    typedef struct BearingNodeInfo_ {
+      int forward_node_id;
+      int reverse_node_id;
+      double bearing;
+    } BearingNodeInfo_t;
+
+    typedef std::map<int,BearingNodeInfo_t> BearingNodes;
+
 private:
     // Apuntan al primer elemento del array. Cada elemento tiene la estructura.
     ///< Containers
