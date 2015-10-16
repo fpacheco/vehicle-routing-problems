@@ -32,6 +32,11 @@ namespace fs = boost::filesystem;
 
 #include "pg_types_vrp.h"
 
+#ifdef WITH_GDAL
+#include "gdali.h"
+#endif
+
+
 /**
  * @class VRPTools
  * @brief Main class for vrptools shared library.
@@ -97,7 +102,7 @@ public:
     bool readContainersFromFile(std::string fileBasePath);
     // Read otherlocs from file
     bool readOtherLocsFromFile(std::string fileBasePath);
-    // Solve the problem
+    // Check the data of the problem
     bool check();
     // Solve the problem
     void solve();
@@ -117,15 +122,20 @@ private:
     ///< Time table matrix
     ttime_t *mTimeTable;
     unsigned int mTimeTableCount;
-
-    unsigned int mNIters; ///< Number of iterations before stop in the solver
-    bool mRightSide; ///< Get containers from right side
-    bool mReady; ///< Detailed description after the member
-    bool mUseOsrm; ///< Use OSRM
-
-    bool mLogging; ///< Log vrptools actions
-    fs::path mLogDir; ///< Logging directory path
-    fs::path mLogFile; ///< Logging file name (not path)
+    ///< Number of iterations before stop in the solver
+    unsigned int mNIters;
+    ///< Get containers from right side
+    bool mRightSide;
+    ///< Detailed description after the member
+    bool mReady;
+    ///< Use OSRM
+    bool mUseOsrm;
+    ///< Log vrptools actions
+    bool mLogging;
+    ///< Logging directory path
+    fs::path mLogDir;
+    ///< Logging file name (not path)
+    fs::path mLogFile;
 };
 
 #endif
