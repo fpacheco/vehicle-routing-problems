@@ -7,6 +7,10 @@
 #include <exception>
 #include <vector>
 
+#ifdef DOVRPLOG
+#include "logger.h"
+#endif
+
 #include "pg_types_vrp.h"
 
 class LoadFromFiles {

@@ -51,6 +51,7 @@ void solve( const std::string &baseDir, const std::vector<std::string> &files )
   if ( boost::filesystem::exists(baseDir) && boost::filesystem::is_directory(baseDir))
   {
     for (auto & element : files) {
+      // std::cout << baseDir << element << std::endl;
       VRPTools vrp;
       vrp.readDataFromFiles(baseDir + element);
       vrp.solve();

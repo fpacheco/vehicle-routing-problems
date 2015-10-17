@@ -106,6 +106,8 @@ public:
     bool check();
     // Solve the problem
     void solve();
+    // Generate time matrix and check errors
+    bool createTimeMatrix(std::string fileBasePath, std::string data, std::string errors);
 
 private:
     // Apuntan al primer elemento del array. Cada elemento tiene la estructura.
@@ -136,6 +138,9 @@ private:
     fs::path mLogDir;
     ///< Logging file name (not path)
     fs::path mLogFile;
+
+// 4856
+
 };
 
 #endif
