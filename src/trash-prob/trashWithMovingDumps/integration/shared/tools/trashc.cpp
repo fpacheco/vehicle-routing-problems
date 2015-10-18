@@ -46,8 +46,43 @@ void checkOSRM()
   }
 }
 
+void calculateTimeMatrix(const std::string &baseDir, const std::vector<std::string> &files)
+{
+  //std::cout << "calculateTimeMatrix baseDir: " << baseDir << ", files: " << files.size() << std::endl;
+
+  std::string data;
+  std::string errors;
+
+  if (files.size()<=0) {
+    return;
+  }
+
+  if ( boost::filesystem::exists(baseDir) && boost::filesystem::is_directory(baseDir))
+  {
+    for (auto & element : files) {
+      // std::cout << baseDir << element << std::endl;
+      VRPTools vrp;
+      bool res = vrp.createTimeMatrix(baseDir + element, data, errors);
+      if (res) {
+        std::cout << "Data:\n" << data;
+      } else {
+        std::cout << "Errors:\n" << errors;
+      }
+    }
+  } else {
+    std::cerr << "Directory ("<< base << ") dont exist!" << std::endl;
+    return;
+  }
+
+}
+
 void solve( const std::string &baseDir, const std::vector<std::string> &files )
 {
+
+  if (files.size()<=0) {
+    return;
+  }
+
   if ( boost::filesystem::exists(baseDir) && boost::filesystem::is_directory(baseDir))
   {
     for (auto & element : files) {
@@ -56,10 +91,11 @@ void solve( const std::string &baseDir, const std::vector<std::string> &files )
       vrp.readDataFromFiles(baseDir + element);
       vrp.solve();
     }
-    exit(0);
   } else {
     std::cerr << "Directory ("<< base << ") dont exist!" << std::endl;
+    return ;
   }
+
 }
 
 int main(int argc, char **argv)
@@ -71,6 +107,7 @@ int main(int argc, char **argv)
         ("help,h", "Help screen")
         ("checkOSRM", "Check OSRM")
         ("checkData", "Check the data. Don't process anything.")
+        ("calculateTM", "Calculate OSRM time matrix")
         ("base", value<std::string>(), "Base directory")
         ("files", value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), "File begin without endings");
 
@@ -88,7 +125,7 @@ int main(int argc, char **argv)
     if (vm.count("help")) {
       std::cout << desc << std::endl;
       std::cout << "Example:"<< std::endl;
-      std::cout << "\ttests/test001 --base ../tests/InputFiles/ rivera"<< std::endl;
+      std::cout << "\ttools/trashc --base ../tests/InputFiles/ rivera"<< std::endl;
     }
 
     if (vm.count("checkOSRM")) {
@@ -104,12 +141,14 @@ int main(int argc, char **argv)
     if (vm.count("files")) {
       if (vm.count("checkData")) {
         checkData( base, vm["files"].as<std::vector<std::string>>() );
+      } else if ( vm.count("calculateTM") ) {
+        calculateTimeMatrix( base, vm["files"].as<std::vector<std::string>>() );
       } else {
         solve( base, vm["files"].as<std::vector<std::string>>() );
       }
     }
-
   } catch (const error &ex) {
     std::cerr << ex.what() << std::endl;
   }
+  return(0);
 }

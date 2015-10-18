@@ -254,6 +254,23 @@ bool OsrmClient::getOsrmTime( double lat1, double lon1 , double lat2,
   return false;
 }
 
+bool OsrmClient::getOsrmTime(double lat1, double lon1, double bearing1, double lat2, double lon2, double bearing2, double &time)
+{
+  if ( not connectionAvailable ) return false;
+  if ( not use ) return false;
+
+#ifdef DOSTATS
+  STATS->inc( "OsrmClient::getOsrmTime (2 points) " );
+#endif
+  clear();
+  addViaPoint( lat1, lon1, bearing1 );
+  addViaPoint( lat2, lon2, bearing2 );
+
+  if ( getOsrmViaroute() ) return getOsrmTime( time );
+
+  return false;
+}
+
 bool OsrmClient::getOsrmTime( double lat1, double lon1 , double lat2,
                               double lon2, const  std::string &hint1, const std::string &hint2,
                               double &time )

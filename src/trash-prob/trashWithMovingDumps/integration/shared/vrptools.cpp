@@ -105,6 +105,9 @@ bool VRPTools::readContainersFromFile(std::string fileBasePath)
   LoadFromFiles loader = LoadFromFiles();
   loader.load_containers(fileBasePath + ".containers.txt");
   mContainers = loader.getContainers(mContainersCount);
+#ifdef VRPMINTRACE
+  DLOG(INFO) << "mContainersCount: " << mContainersCount;
+#endif
 }
 
 bool VRPTools::readOtherLocsFromFile(std::string fileBasePath)
@@ -112,6 +115,9 @@ bool VRPTools::readOtherLocsFromFile(std::string fileBasePath)
   LoadFromFiles loader = LoadFromFiles();
   loader.load_otherlocs(fileBasePath + ".otherlocs.txt");
   mOtherLocs = loader.getOtherlocs(mOtherLocsCount);
+#ifdef VRPMINTRACE
+  DLOG(INFO) << "mOtherLocsCount: " << mOtherLocsCount;
+#endif
 }
 
 bool VRPTools::check()
@@ -251,16 +257,21 @@ void VRPTools::solve()
     }
 }
 
-bool VRPTools::createTimeMatrix(std::string fileBasePath, std::string data, std::string errors) {
+bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &data, std::string &errors)
+{
+
+  // Error print stream
+  std::stringstream ss;
 
   // .containers.txt .otherlocs.txt .vehicles.txt .dmatrix-time.txt
   readContainersFromFile(fileBasePath);
   readOtherLocsFromFile(fileBasePath);
 
-  #ifdef VRPMINTRACE
-    DLOG(INFO) << "mContainersCount: " << mContainersCount;
-    DLOG(INFO) << "mOtherLocsCount: " << mOtherLocsCount;
-  #endif
+  if (mContainersCount <=0 || mOtherLocsCount <=0) {
+    ss << "Error reading data" << std::endl;
+    errors = ss.str();
+    return false;
+  }
 
   // Variables
   bool oldStateOsrm;
@@ -276,8 +287,7 @@ bool VRPTools::createTimeMatrix(std::string fileBasePath, std::string data, std:
   std::vector< Twnode > nodes;
   // UID is user ID, double is the bearing
   std::map<UID,double> bearings;
-  // Error print stream
-  std::stringstream ss;
+  ss.precision(6);
   ss << std::fixed << "ID\tX\tY" << std::endl;
   // True on first error
   bool errorBearing = false;
@@ -286,7 +296,9 @@ bool VRPTools::createTimeMatrix(std::string fileBasePath, std::string data, std:
 
   // Backup OSRM state
   oldStateOsrm = osrmi->getUse();
-  osrmi->useOsrm(true);  //forcing osrm usage
+  // forcing osrm usage
+  osrmi->useOsrm(true);
+  // Delete data
   osrmi->clear();
 
   // Containers
@@ -300,7 +312,7 @@ bool VRPTools::createTimeMatrix(std::string fileBasePath, std::string data, std:
       errorBearing = true;
       ss << mContainers[i].id << "\t"
         << mContainers[i].x << "\t"
-        << mContainers[i].y;
+        << mContainers[i].y << std::endl;
       continue;
     }
     // Get nearest fisical OSRM node (edge intersection) of phantom
@@ -365,6 +377,10 @@ bool VRPTools::createTimeMatrix(std::string fileBasePath, std::string data, std:
     return false;
   }
 
+  std::stringstream tt;
+  tt.precision(2);
+  tt << std::fixed << "#FROMNODE TONODE OSRMTIME" << std::endl;
+  double osrmTime;
   int nodesSize = nodes.size();
   for (UINT i = 0; i < nodesSize; i++) {
     int from = nodes[i].nid();
@@ -373,9 +389,19 @@ bool VRPTools::createTimeMatrix(std::string fileBasePath, std::string data, std:
       if ( from == to ){
         continue;
       }
-      osrmi->clear();
-
+      osrmi->getOsrmTime(
+        nodes[i].y(),
+        nodes[i].x(),
+        bearings[from],
+        nodes[j].y(),
+        nodes[j].x(),
+        bearings[to],
+        osrmTime
+      );
+      tt << nodes[i].id() << " " << nodes[j].id() << " " << osrmTime << std::endl;
     }
   }
   osrmi->useOsrm(oldStateOsrm);
+  data = tt.str();
+  return true;
 }
