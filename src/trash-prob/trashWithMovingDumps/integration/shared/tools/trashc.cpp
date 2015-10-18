@@ -6,6 +6,10 @@
 #include <string>
 #include <math.h>
 #include <stdio.h>
+// Write data to file
+#include <iostream>
+#include <fstream>
+
 // Command line options
 #include <boost/program_options.hpp>
 // If exist
@@ -64,7 +68,11 @@ void calculateTimeMatrix(const std::string &baseDir, const std::vector<std::stri
       VRPTools vrp;
       bool res = vrp.createTimeMatrix(baseDir + element, data, errors);
       if (res) {
-        std::cout << "Data:\n" << data;
+        // std::cout << "Data:\n" << data;
+        std::ofstream outFile;
+        outFile.open ( baseDir + element + ".dmatrix-time.txt");
+        outFile << data;
+        outFile.close();
       } else {
         std::cout << "Errors:\n" << errors;
       }
