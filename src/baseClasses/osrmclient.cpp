@@ -446,10 +446,12 @@ bool OsrmClient::getOsrmViaroute()
 
   DLOG(INFO) << "route_parameters.coordinates.size(): " << route_parameters.coordinates.size();
   DLOG(INFO) << "route_parameters.bearings.size(): " << route_parameters.bearings.size();
+  /*
   for (int i=0; i< route_parameters.coordinates.size(); i++ ) {
     DLOG(INFO) << route_parameters.coordinates[i].lon << route_parameters.coordinates[i].lat;
     DLOG(INFO) << route_parameters.bearings[i];
   }
+  */
 
 #endif
 
@@ -487,7 +489,7 @@ bool OsrmClient::getOsrmViaroute()
 
 #ifdef DOVRPLOG
   DLOG(INFO) << "ending OsrmClient::getOsrmViaroute() with status: " << status;
-  DLOG(INFO) << httpContent;
+  // DLOG(INFO) << httpContent;
 #endif
 
   return true;
