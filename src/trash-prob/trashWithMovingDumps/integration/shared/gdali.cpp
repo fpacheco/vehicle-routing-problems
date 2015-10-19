@@ -1,21 +1,22 @@
 #include "gdali.h"
-
+/*
 bool GdalI::openOGRDataSource(std::string filePath)
 {
-  /*
-  mOGROpenDS = OGRSFDriverRegistrar::Open( filePath.c_str(), FALSE );
-  if( mOGROpenDS == NULL ) {
+
+  mOpenDataset = (GDALDataset*) GDALOpenEx( filePath.c_str(), GDAL_OF_VECTOR, NULL, NULL, NULL );
+  if( mOpenDataset == NULL ) {
     return false;
   }
   mFilePath = filePath;
   return true;
-  */
+
 }
 
 void GdalI::closeOGRDataSource()
 {
-  if( mOGROpenDS != NULL ) {
-    OGRDataSource::DestroyDataSource( mOGROpenDS );
+  if( mOpenDataset != NULL ) {
+    GDALClose( mOpenDataset );
   }
 }
+*/
 
