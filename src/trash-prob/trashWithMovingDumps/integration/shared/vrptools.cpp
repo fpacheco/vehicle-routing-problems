@@ -403,5 +403,4 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
   osrmi->useOsrm(oldStateOsrm);
   data = tt.str();
   return true;
->>>>>>> 32b96d51e1a57ea2be7509e8c7f2af0508221315
 }
