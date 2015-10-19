@@ -113,6 +113,10 @@ public:
   bool getOsrmViaroute();
   bool getOsrmTime( double lat1, double lon1 , double lat2, double lon2,
                     double &time );
+  bool getOsrmTime(
+    double lat1, double lon1, double bearing1,
+    double lat2, double lon2, double bearing2,
+    double &time );
   bool getOsrmTime( double lat1, double lon1 , double lat2, double lon2,
                     const std::string &hint1, const std::string &hint2, double &time );
   bool getOsrmTime( const Twnode &node1, const Twnode &node2, double &time );

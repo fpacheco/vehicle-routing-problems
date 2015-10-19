@@ -86,11 +86,12 @@ bool VRPTools::checkOsrmClient()
 bool VRPTools::readDataFromFiles(std::string fileBasePath)
 {
     // .containers.txt .otherlocs.txt .vehicles.txt .dmatrix-time.txt
-    LoadFromFiles loader(fileBasePath);
+    LoadFromFiles loader = LoadFromFiles(fileBasePath);
     mContainers = loader.getContainers(mContainersCount);
     mOtherLocs = loader.getOtherlocs(mOtherLocsCount);
     mVehicles = loader.getVehicles(mVehiclesCount);
     mTimeTable = loader.getTtimes(mTimeTableCount);
+
 #ifdef VRPMINTRACE
     DLOG(INFO) << "mContainersCount: " << mContainersCount;
     DLOG(INFO) << "mOtherLocsCount: " << mOtherLocsCount;
@@ -104,6 +105,9 @@ bool VRPTools::readContainersFromFile(std::string fileBasePath)
   LoadFromFiles loader = LoadFromFiles();
   loader.load_containers(fileBasePath + ".containers.txt");
   mContainers = loader.getContainers(mContainersCount);
+#ifdef VRPMINTRACE
+  DLOG(INFO) << "mContainersCount: " << mContainersCount;
+#endif
 }
 
 bool VRPTools::readOtherLocsFromFile(std::string fileBasePath)
@@ -111,6 +115,9 @@ bool VRPTools::readOtherLocsFromFile(std::string fileBasePath)
   LoadFromFiles loader = LoadFromFiles();
   loader.load_otherlocs(fileBasePath + ".otherlocs.txt");
   mOtherLocs = loader.getOtherlocs(mOtherLocsCount);
+#ifdef VRPMINTRACE
+  DLOG(INFO) << "mOtherLocsCount: " << mOtherLocsCount;
+#endif
 }
 
 bool VRPTools::check()
@@ -250,6 +257,7 @@ void VRPTools::solve()
     }
 }
 
+<<<<<<< HEAD
 void VRPTools::createTimeMatrix(std::string fileBasePath) {
 
   // .containers.txt .otherlocs.txt .vehicles.txt .dmatrix-time.txt
@@ -270,6 +278,23 @@ void VRPTools::createTimeMatrix(std::string fileBasePath) {
     DLOG(INFO) << "Containers have " << mContainersCount << " elements!";
     DLOG(INFO) << "Otherlocs have " << mOtherLocsCount << " elements!";
   #endif
+=======
+bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &data, std::string &errors)
+{
+
+  // Error print stream
+  std::stringstream ss;
+
+  // .containers.txt .otherlocs.txt .vehicles.txt .dmatrix-time.txt
+  readContainersFromFile(fileBasePath);
+  readOtherLocsFromFile(fileBasePath);
+
+  if (mContainersCount <=0 || mOtherLocsCount <=0) {
+    ss << "Error reading data" << std::endl;
+    errors = ss.str();
+    return false;
+  }
+>>>>>>> 32b96d51e1a57ea2be7509e8c7f2af0508221315
 
   // Variables
   bool oldStateOsrm;
@@ -280,6 +305,7 @@ void VRPTools::createTimeMatrix(std::string fileBasePath) {
   unsigned int one_way;
   unsigned int fw_id, rv_id, fw_wt, rv_wt, street_id;
 
+<<<<<<< HEAD
   // Backup OSRM state
   oldStateOsrm = osrmi->getUse();
   osrmi->useOsrm(true);  //forcing osrm usage
@@ -307,6 +333,49 @@ void VRPTools::createTimeMatrix(std::string fileBasePath) {
     Node phyNode = Node(phyNLon,phyNLat);
     Node phaNode = Node(phaNLon,phaNLat);
     bool ret = mContainers[i]->isRightToSegment(phyNode, phaNode);
+=======
+  int pncount;
+  pncount = 0;
+  std::vector< Twnode > nodes;
+  // UID is user ID, double is the bearing
+  std::map<UID,double> bearings;
+  ss.precision(6);
+  ss << std::fixed << "ID\tX\tY" << std::endl;
+  // True on first error
+  bool errorBearing = false;
+  // Node internal Id
+  int nid = 0;
+
+  // Backup OSRM state
+  oldStateOsrm = osrmi->getUse();
+  // forcing osrm usage
+  osrmi->useOsrm(true);
+  // Delete data
+  osrmi->clear();
+
+  // Containers
+  for (UINT i = 0; i < mContainersCount; i++) {
+    one_way = 100;
+    // Custom/modified version of nearest plugin
+    osrmi->getOsrmNearest( mContainers[i].x, mContainers[i].y, phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+    // If forward_weight or reverse_weight phantom node is on physical node
+    // if ( (one_way != 1) && (fw_wt == 0 || rv_wt == 0) ) {
+    if (fw_wt == 0 || rv_wt == 0) {
+      errorBearing = true;
+      ss << mContainers[i].id << "\t"
+        << mContainers[i].x << "\t"
+        << mContainers[i].y << std::endl;
+      continue;
+    }
+    // Get nearest fisical OSRM node (edge intersection) of phantom
+    osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
+    // Bearing calculation
+    Node contNode = Node(mContainers[i].x, mContainers[i].y);
+    Node phyNode = Node(phyNLon,phyNLat);
+    Node phaNode = Node(phaNLon,phaNLat);
+    // Is right
+    bool ret = contNode.isRightToSegment(phyNode, phaNode);
+>>>>>>> 32b96d51e1a57ea2be7509e8c7f2af0508221315
     double bearing;
     if (ret) {
       bearing = phyNode.bearing(phaNode, false);
@@ -314,6 +383,7 @@ void VRPTools::createTimeMatrix(std::string fileBasePath) {
       bearing = phyNode.bearing(phaNode, true);
     }
 
+<<<<<<< HEAD
     //typnode=pickup,id,x,y
     twn = Twnode(mContainers[i]->nid(), mContainers[i]->id(), mContainers[i]->x(), mContainers[i]->x() );
     BearingNodeInfo_t nodeinfo;
@@ -347,12 +417,43 @@ void VRPTools::createTimeMatrix(std::string fileBasePath) {
     Node phyNode = Node(phyNLon,phyNLat);
     Node phaNode = Node(phaNLon,phaNLat);
     bool ret = mOtherLocs[i]->isRightToSegment(phyNode, phaNode);
+=======
+    Twnode twNode = Twnode(nid, mContainers[i].id, mContainers[i].x, mContainers[i].y);
+    nodes.push_back(twNode);
+    bearings[nid] = bearing;
+    nid++;
+  }
+
+  // Otherlocs
+  for (UINT i = 0; i < mOtherLocsCount; i++) {
+    one_way = 100;
+    // Custom/modified version of nearest plugin
+    osrmi->getOsrmNearest( mOtherLocs[i].x, mOtherLocs[i].y, phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
+    // If forward_weight or reverse_weight phantom node is on physical node
+    // if ( (one_way != 1) && (fw_wt == 0 || rv_wt == 0) ) {
+    if (fw_wt == 0 || rv_wt == 0) {
+      errorBearing = true;
+      ss << mOtherLocs[i].id << "\t"
+        << mOtherLocs[i].x << "\t"
+        << mOtherLocs[i].y << std::endl;
+      continue;
+    }
+    // Get nearest fisical OSRM node (edge intersection) of phantom
+    osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
+    // Bearing calculation
+    Node contNode = Node(mOtherLocs[i].x, mOtherLocs[i].y);
+    Node phyNode = Node(phyNLon,phyNLat);
+    Node phaNode = Node(phaNLon,phaNLat);
+    // Is right
+    bool ret = contNode.isRightToSegment(phyNode, phaNode);
+>>>>>>> 32b96d51e1a57ea2be7509e8c7f2af0508221315
     double bearing;
     if (ret) {
       bearing = phyNode.bearing(phaNode, false);
     } else {
       bearing = phyNode.bearing(phaNode, true);
     }
+<<<<<<< HEAD
     //typnode=pickup,id,x,y
     twn = Twnode(1, mOtherLocs[i]->id, mOtherLocs[i]->x(), mOtherLocs[i]->y() );
     //typnode=pickup,id,x,y
@@ -452,4 +553,46 @@ void VRPTools::createTimeMatrix(std::string fileBasePath) {
         }
     }
   }
+=======
+
+    Twnode twNode = Twnode(nid,mOtherLocs[i].id, mOtherLocs[i].x, mOtherLocs[i].y);
+    nodes.push_back(twNode);
+    bearings[nid] = bearing;
+    nid++;
+  }
+
+  if (errorBearing) {
+    osrmi->useOsrm(oldStateOsrm);
+    errors = ss.str();
+    return false;
+  }
+
+  std::stringstream tt;
+  tt.precision(2);
+  tt << std::fixed << "#FROMNODE TONODE OSRMTIME" << std::endl;
+  double osrmTime;
+  int nodesSize = nodes.size();
+  for (UINT i = 0; i < nodesSize; i++) {
+    int from = nodes[i].nid();
+    for (UINT j = 0; j < nodesSize; j++) {
+      int to = nodes[j].nid();
+      if ( from == to ){
+        continue;
+      }
+      osrmi->getOsrmTime(
+        nodes[i].y(),
+        nodes[i].x(),
+        bearings[from],
+        nodes[j].y(),
+        nodes[j].x(),
+        bearings[to],
+        osrmTime
+      );
+      tt << nodes[i].id() << " " << nodes[j].id() << " " << osrmTime << std::endl;
+    }
+  }
+  osrmi->useOsrm(oldStateOsrm);
+  data = tt.str();
+  return true;
+>>>>>>> 32b96d51e1a57ea2be7509e8c7f2af0508221315
 }

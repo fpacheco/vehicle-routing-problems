@@ -106,6 +106,8 @@ public:
     bool check();
     // Solve the problem
     void solve();
+    // Generate time matrix and check errors
+    bool createTimeMatrix(const std::string &fileBasePath, std::string &data, std::string &errors);
 
     void createTimeMatrix(std::string fileBasePath);
 

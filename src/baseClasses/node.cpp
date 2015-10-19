@@ -297,7 +297,7 @@ double Node::bearing(const Node &other, bool reverse) const
     result += 360.f;
   }
 
-  while (result >= 360.f) {
+  while (result > 360.f) {
     result -= 360.f;
   }
 

@@ -4,10 +4,15 @@
 #include "loadfromfiles.h"
 
 LoadFromFiles::LoadFromFiles(){
-
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "LoadFromFiles()";
+#endif
 }
 
 LoadFromFiles::LoadFromFiles(std::string &filePrefix) {
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "filePrefix: " << filePrefix;
+#endif
     load_containers( filePrefix + ".containers.txt" );
     load_otherlocs( filePrefix + ".otherlocs.txt" );
     load_vehicles( filePrefix + ".vehicles.txt" );

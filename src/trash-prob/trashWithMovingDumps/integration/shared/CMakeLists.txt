@@ -108,9 +108,13 @@ find_package(Threads REQUIRED)
 
 ## OSRM
 # Office
-set(OSRM_SOURCE_PATH "/disco_local/fpacheco/idm/right-side/osrm-backend")
+# set(OSRM_SOURCE_PATH "/disco_local/fpacheco/idm/right-side/osrm-backend")
 # Home
+<<<<<<< HEAD
 # set(OSRM_SOURCE_PATH "/home/fpacheco/workspace/idm/right-side/osrm-backend")
+=======
+set(OSRM_SOURCE_PATH "/home/fpacheco/workspace/idm/right-side/osrm-backend")
+>>>>>>> 32b96d51e1a57ea2be7509e8c7f2af0508221315
 #set(OSRM_INCLUDE_DIRS ${OSRM_SOURCE_PATH}/build/libOSRM.a)
 set(OSRM_SOURCE_PATH "/usr/local")
 set(OSRM_INCLUDE_DIRS ${OSRM_SOURCE_PATH}/lib/libOSRM.a)
