@@ -244,6 +244,30 @@ private:
       // Custom/modified version of nearest plugin
       osrmi->getOsrmNearest( original[i].x(), original[i].y(), phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
 
+      //bearing FROM container TO phantomnode
+      double compBearing;
+      double bearing;
+      // Bearing calculation
+      Node contNode = Node(original[i].x(), original[i].y());
+      Node phaNode = Node(phaNLon,phaNLat);
+      compBearing = contNode.bearing(phaNode, false);
+      bearing = compBearing + 90;
+      if (bearing>=360) {
+        bearing-=360;
+      }
+
+      PhantomNode pn = PhantomNode(pncount, phaNLon, phaNLat, fw_id, rv_id, fw_wt, rv_wt, street_id);
+
+      /*
+      bool ret = original[i].isRightToSegment(phyNode, phaNode);
+      double bearing;
+      if (ret) {
+        bearing = phyNode.bearing(phaNode, false);
+      } else {
+        bearing = phyNode.bearing(phaNode, true);
+      }
+
+
       // Get nearest fisical OSRM node (edge intersection) of phantom
       osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
 
@@ -260,9 +284,12 @@ private:
       } else {
         bearing = phyNode.bearing(phaNode, true);
       }
+      */
+
       // Set pn bearing
       pn.setBearing(bearing);
 
+#if 0
       // Check one_way and two_ways streets
       if (one_way == 1) {
 #ifdef VRPMINTRACE
@@ -318,6 +345,7 @@ private:
           pn.setAfterPNode( pa );
         }
       }
+#endif //0
 
 #ifdef VRPMINTRACE
       DLOG(INFO) << std::setprecision(8) << "PhantomNode";

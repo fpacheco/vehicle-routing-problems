@@ -1,4 +1,5 @@
-#include <stdlib.h> /* malloc, calloc, realloc, free */
+#include <stdlib.h>     // malloc, calloc, realloc, free
+#include <cmath>        // std::abs
 
 #include "vrptools.h"
 #include "loadfromfiles.h"
@@ -308,13 +309,31 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     osrmi->getOsrmNearest( mContainers[i].x, mContainers[i].y, phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
     // If forward_weight or reverse_weight phantom node is on physical node
     // if ( (one_way != 1) && (fw_wt == 0 || rv_wt == 0) ) {
-    if (fw_wt == 0 || rv_wt == 0) {
+    double dlon, dlat;
+    dlon = std::abs(mOtherLocs[i].x-phaNLon);
+    dlat = std::abs(mOtherLocs[i].y-phaNLat);
+    //if (fw_wt == 0 || rv_wt == 0) {
+    if ( dlon<0.0000009 && dlat<0.0000009) {
       errorBearing = true;
       ss << mContainers[i].id << "\t"
         << mContainers[i].x << "\t"
         << mContainers[i].y << std::endl;
       continue;
     }
+
+    //bearing FROM container TO phantomnode
+    double compBearing;
+    double bearing;
+    // Bearing calculation
+    Node contNode = Node(mContainers[i].x, mContainers[i].y);
+    Node phaNode = Node(phaNLon,phaNLat);
+    compBearing = contNode.bearing(phaNode, false);
+    bearing = compBearing + 90;
+    if (bearing>=360) {
+      bearing-=360;
+    }
+
+    /*
     // Get nearest fisical OSRM node (edge intersection) of phantom
     osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
     // Bearing calculation
@@ -329,6 +348,7 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     } else {
       bearing = phyNode.bearing(phaNode, true);
     }
+    */
 
     Twnode twNode = Twnode(nid, mContainers[i].id, mContainers[i].x, mContainers[i].y);
     nodes.push_back(twNode);
@@ -343,13 +363,31 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     osrmi->getOsrmNearest( mOtherLocs[i].x, mOtherLocs[i].y, phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
     // If forward_weight or reverse_weight phantom node is on physical node
     // if ( (one_way != 1) && (fw_wt == 0 || rv_wt == 0) ) {
-    if (fw_wt == 0 || rv_wt == 0) {
+    double dlon, dlat;
+    dlon = std::abs(mOtherLocs[i].x-phaNLon);
+    dlat = std::abs(mOtherLocs[i].y-phaNLat);
+    //if (fw_wt == 0 || rv_wt == 0) {
+    if ( dlon<0.000001 && dlat<0.000001) {
       errorBearing = true;
       ss << mOtherLocs[i].id << "\t"
         << mOtherLocs[i].x << "\t"
         << mOtherLocs[i].y << std::endl;
       continue;
     }
+
+    //bearing FROM container TO phantomnode
+    double compBearing;
+    double bearing;
+    // Bearing calculation
+    Node contNode = Node(mOtherLocs[i].x, mOtherLocs[i].y);
+    Node phaNode = Node(phaNLon,phaNLat);
+    compBearing = contNode.bearing(phaNode, false);
+    bearing = compBearing + 90;
+    if (bearing>=360) {
+      bearing-=360;
+    }
+
+    /*
     // Get nearest fisical OSRM node (edge intersection) of phantom
     osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
     // Bearing calculation
@@ -364,6 +402,7 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     } else {
       bearing = phyNode.bearing(phaNode, true);
     }
+    */
 
     Twnode twNode = Twnode(nid,mOtherLocs[i].id, mOtherLocs[i].x, mOtherLocs[i].y);
     nodes.push_back(twNode);
@@ -377,6 +416,9 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     return false;
   }
 
+  bool errorTimes = false;
+  // Empty ss
+  ss.str("");
   std::stringstream tt;
   tt.precision(2);
   tt << std::fixed << "#FROMNODE TONODE OSRMTIME" << std::endl;
@@ -389,7 +431,7 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
       if ( from == to ){
         continue;
       }
-      osrmi->getOsrmTime(
+      bool res = osrmi->getOsrmTime(
         nodes[i].y(),
         nodes[i].x(),
         bearings[from],
@@ -398,9 +440,21 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
         bearings[to],
         osrmTime
       );
-      tt << nodes[i].id() << " " << nodes[j].id() << " " << osrmTime << std::endl;
+      if (res) {
+        tt << nodes[i].id() << " " << nodes[j].id() << " " << osrmTime << std::endl;
+      } else {
+        errorTimes=true;
+        ss << "From: " << nodes[i].id() << " To:" << nodes[j].id() << " failed!" << std::endl;
+      }
     }
   }
+
+  if (errorTimes) {
+    osrmi->useOsrm(oldStateOsrm);
+    errors = ss.str();
+    return false;
+  }
+
   osrmi->useOsrm(oldStateOsrm);
   data = tt.str();
   return true;

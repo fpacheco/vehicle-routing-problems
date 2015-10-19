@@ -3,27 +3,28 @@
 
 #include <string>
 // OGR headers
+#include "gdal.h"
 #include "ogrsf_frmts.h"
 
+/*
 class GdalI {
 
 public:
   GdalI() {
-     OGRRegisterAll();
+     GDALAllRegister();
   }
-
   // ~GdalI() { }
-
   bool openOGRDataSource(std::string filePath);
   void closeOGRDataSource();
 
 private:
   // OGS datasource
-  OGRDataSource *mOGROpenDS;
+  GDALDataset *mOpenDataset;
   // OGR file to read
   std::string mFilePath;
   // GDAL datasource
   // GDALDataset *mPoDataset;
 };
+*/
 
 #endif
