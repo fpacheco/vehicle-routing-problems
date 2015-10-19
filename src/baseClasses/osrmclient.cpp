@@ -220,10 +220,23 @@ void OsrmClient::addViaPoints(const std::deque<Twnode> &path )
 
 void OsrmClient::addViaPoints(const std::vector<Twnode> &path, const std::vector<double> &bearings)
 {
-  if ( path.size()!=bearings.size() ) return;
+#ifdef DOVRPLOG
+    DLOG(INFO) << "starting OsrmClient::addViaPoints(const std::vector<Twnode> &path, const std::vector<double> &bearings)";
+#endif
 
-  if ( not connectionAvailable ) return;
+  if ( path.size()!=bearings.size() ) {
+#ifdef DOVRPLOG
+    DLOG(INFO) << "Error: in addViaPoints path.size()!=bearings.size()";
+#endif
+    return;
+  }
 
+  if ( not connectionAvailable ) {
+#ifdef DOVRPLOG
+    DLOG(INFO) << "Error: in addViaPoints not connectionAvailable";
+#endif
+    return;
+  }
   if ( not use ) return;
 
   for ( int i = 0; i <= path.size(); i++ ) {
@@ -233,6 +246,9 @@ void OsrmClient::addViaPoints(const std::vector<Twnode> &path, const std::vector
       bearings[i]
     );
   }
+#ifdef DOVRPLOG
+    DLOG(INFO) << "ending OsrmClient::addViaPoints(const std::vector<Twnode> &path, const std::vector<double> &bearings)";
+#endif
 }
 
 bool OsrmClient::getOsrmTime( double lat1, double lon1 , double lat2,
@@ -497,6 +513,9 @@ bool OsrmClient::getOsrmTime( double &time )
 
 bool OsrmClient::getOsrmTimes( std::deque<double> &times )
 {
+#ifdef DOVRPLOG
+    DLOG(INFO) << "starting OsrmClient::getOsrmTimes( std::deque<double> &times )";
+#endif
   if ( not connectionAvailable ) return false;
 
   if ( not use ) return false;
@@ -508,6 +527,11 @@ bool OsrmClient::getOsrmTimes( std::deque<double> &times )
 
   if ( status != 1 or httpContent.size() == 0 ) {
     err_msg = "OsrmClient:getOsrmTimes does not have a valid OSRM response!";
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << err_msg;
+#endif
+
 #ifdef DOSTATS
     STATS->inc( err_msg );
     STATS->addto( "OsrmClient::getOsrmTimes (errors) Cumulative time:",
@@ -521,6 +545,11 @@ bool OsrmClient::getOsrmTimes( std::deque<double> &times )
 
   if ( jsondoc.HasParseError() ) {
     err_msg = "OsrmClient:getOsrmTimes invalid json document in OSRM response!";
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << err_msg;
+#endif
+
 #ifdef DOSTATS
     STATS->inc( err_msg );
     STATS->addto( "OsrmClient::getOsrmTimes (errors) Cumulative time:",
@@ -530,6 +559,7 @@ bool OsrmClient::getOsrmTimes( std::deque<double> &times )
   }
 
   if ( not getTimes( jsondoc, times ) ) {
+
 #ifdef DOSTATS
     STATS->addto( "OsrmClient::getOsrmTimes (errors) Cumulative time:",
                   timer.duration() );
@@ -540,6 +570,10 @@ bool OsrmClient::getOsrmTimes( std::deque<double> &times )
 #ifdef DOSTATS
   STATS->addto( "OsrmClient::getOsrmTimes (does the work) Cumulative time:",
                 timer.duration() );
+#endif
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << "ending OsrmClient::getOsrmTimes( std::deque<double> &times )";
 #endif
   return true;
 }
@@ -1242,10 +1276,24 @@ bool OsrmClient::getTime( rapidjson::Document &jsondoc, double &time )
  */
 bool OsrmClient::getTimes( rapidjson::Document &jsondoc, std::deque<double> &times )
 {
+#ifdef DOVRPLOG
+    DLOG(INFO) << "starting OsrmClient::getTimes( rapidjson::Document &jsondoc, std::deque<double> &times )";
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer< rapidjson::StringBuffer > writer(buffer);
+    jsondoc.Accept(writer);
+    DLOG(INFO) << buffer.GetString();
+#endif
+
   if ( not connectionAvailable ) return false;
 
   if ( not jsondoc.HasMember( "route_instructions" ) ) {
     err_msg = "OsrmClient:getTimes failed to find 'route_instructions' key in OSRM response!";
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << err_msg;
+#endif
+
 #ifdef DOSTATS
     STATS->inc( err_msg );
 #endif
@@ -1257,6 +1305,11 @@ bool OsrmClient::getTimes( rapidjson::Document &jsondoc, std::deque<double> &tim
   // find the 'total_time' in the 'route_summary'
   if ( not instructions.IsArray() or instructions.Size() < 2 ) {
     err_msg = "OsrmClient:getTimes route_instructions is not an array of at least 2 in OSRM response!";
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << err_msg;
+#endif
+
 #ifdef DOSTATS
     STATS->inc( err_msg );
 #endif
@@ -1282,6 +1335,10 @@ bool OsrmClient::getTimes( rapidjson::Document &jsondoc, std::deque<double> &tim
     tmp2_ss << times[i] << ", ";
   DLOG( INFO ) << "OsrmClient:getTime - times: " << tmp2_ss.str() << " min" << std::endl;
   */
+#endif
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << "ending OsrmClient::getTimes( rapidjson::Document &jsondoc, std::deque<double> &times )";
 #endif
 
   return true;

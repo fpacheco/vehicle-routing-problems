@@ -33,6 +33,10 @@
 #include "vrp_assert.h"
 #define RAPIDJSON_ASSERT assert
 #include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
+
+#include <iostream>
 
 #include "timer.h"
 #include "stats.h"
@@ -82,6 +86,10 @@ public:
   }
 
   void clear();
+  void setWantInstructions( bool want )
+  {
+    route_parameters.setInstructionFlag(want);
+  }
   void addViaPoint( double lat, double lon );
   void addViaPoint( double lat, double lon, double bearing );
   void addViaPoint( const Twnode &node );

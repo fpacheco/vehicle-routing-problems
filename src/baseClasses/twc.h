@@ -996,7 +996,6 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   //get all the times using osrm
   bool oldStateOsrm = osrmi->getUse();
   osrmi->useOsrm(true);  //forcing osrm usage
-  osrmi->clear();
 
   // To build the call
   std::vector< Twnode > call;
@@ -1015,6 +1014,8 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
     }
   }
 
+  osrmi->clear();
+  osrmi->setWantInstructions( true );
   // Add point to the call
   osrmi->addViaPoints(call, bearings);
   if (!osrmi->getOsrmViaroute()) {
@@ -1028,23 +1029,20 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   // To store time returned
   std::deque< double > times;
   if (!osrmi->getOsrmTimes(times)){
-    #ifdef VRPMINTRACE
-
-      std::stringstream ss;
-      ss.precision(6);
-      ss << std::fixed;
-
-      ss << "http://localhost:5000/viaroute?";
-
-      DLOG(INFO) << "getOsrmTimes failed";
-      DLOG(INFO) << "\tNID\tID\tBEARING\t";
-      for (unsigned int i = 0; i < call.size(); ++i) {
-          DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << bearings[i] << "\t";
-          ss << "loc=" << call[i].y() << "," << call[i].x() << "&b=" << static_cast<int>(bearings[i]) << "&";
-      }
-      std::string s = ss.str();
-      DLOG(INFO) << s.substr(0, s.size()-1);
-    #endif
+#ifdef VRPMINTRACE
+    std::stringstream ss;
+    ss.precision(6);
+    ss << std::fixed;
+    ss << "http://localhost:5000/viaroute?";
+    DLOG(INFO) << "getOsrmTimes failed";
+    DLOG(INFO) << "\tNID\tID\tBEARING\t";
+    for (unsigned int i = 0; i < call.size(); ++i) {
+      DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << bearings[i] << "\t";
+      ss << "loc=" << call[i].y() << "," << call[i].x() << "&b=" << static_cast<int>(bearings[i]) << "&";
+    }
+    std::string s = ss.str();
+    DLOG(INFO) << s.substr(0, s.size()-1);
+#endif
     osrmi->useOsrm(oldStateOsrm);
     return;
   }
