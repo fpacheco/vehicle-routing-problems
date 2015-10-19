@@ -170,7 +170,7 @@ void OsrmClient::addViaPoint( double lat, double lon, double bearing )
                           lon * COORDINATE_PRECISION );
   route_parameters.coordinates.push_back( p );
   // Bearing -> 0 to 359
-  int bear = static_cast<int>(bearing);
+  int bear = static_cast<int>(bearing + 0.5);
   if (bear==360) {
     bear=0;
   }
@@ -239,7 +239,7 @@ void OsrmClient::addViaPoints(const std::vector<Twnode> &path, const std::vector
   }
   if ( not use ) return;
 
-  for ( int i = 0; i <= path.size(); i++ ) {
+  for ( int i = 0; i < path.size(); i++ ) {
     addViaPoint(
       path[i].y(),
       path[i].x(),
@@ -383,20 +383,24 @@ bool OsrmClient::getOsrmTime( const Twnode &node1, const Twnode &node2,
  */
 bool OsrmClient::getOsrmViaroute()
 {
+#ifdef DOVRPLOG
+    DLOG(INFO) << "starting OsrmClient::getOsrmViaroute()";
+#endif
+
   if ( not connectionAvailable )
   {
-        #ifdef OSRMCLIENT
-          DLOG(INFO) << "Not connectionAvailable";
-        #endif
-      return false;
+#ifdef DOVRPLOG
+    DLOG(INFO) << "Not connectionAvailable";
+#endif
+    return false;
   }
 
   if ( not use )
   {
-        #ifdef OSRMCLIENT
-          DLOG(INFO) << "Not used";
-        #endif
-      return false;
+#ifdef DOVRPLOG
+    DLOG(INFO) << "Not used";
+#endif
+    return false;
   }
 
 #ifdef DOSTATS
@@ -406,6 +410,11 @@ bool OsrmClient::getOsrmViaroute()
 
   if ( route_parameters.coordinates.size() < 2 ) {
     err_msg = "OsrmClient:getOsrmViaroute must be called with two ro more viapoints!";
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << err_msg;
+#endif
+
 #ifdef DOSTATS
     STATS->inc( err_msg );
     STATS->addto( "OsrmClient::getOsrmViaRoute (does the work) Cumulative time",
@@ -416,6 +425,11 @@ bool OsrmClient::getOsrmViaroute()
 
   if ( status == -1 ) {
     err_msg = "OsrmClient:getOsrmViaroute Failed to connect to server!";
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << err_msg;
+#endif
+
 #ifdef DOSTATS
     STATS->inc( err_msg );
     STATS->addto( "OsrmClient::getOsrmViaRoute (does the work) Cumulative time",
@@ -428,12 +442,29 @@ bool OsrmClient::getOsrmViaroute()
   //http::Reply osrm_reply;
   osrm::json::Object json_result;
 
+#ifdef DOVRPLOG
+
+  DLOG(INFO) << "route_parameters.coordinates.size(): " << route_parameters.coordinates.size();
+  DLOG(INFO) << "route_parameters.bearings.size(): " << route_parameters.bearings.size();
+  for (int i=0; i< route_parameters.coordinates.size(); i++ ) {
+    DLOG(INFO) << route_parameters.coordinates[i].lon << route_parameters.coordinates[i].lat;
+    DLOG(INFO) << route_parameters.bearings[i];
+  }
+
+#endif
+
+
   try {
     routing_machine->RunQuery( route_parameters, json_result );
   } catch ( std::exception &e ) {
     err_msg = std::string( "OsrmClient:getOsrmViaRoute caught exception: " )
               + e.what();
     connectionAvailable = false;
+
+#ifdef DOVRPLOG
+    DLOG(INFO) << err_msg;
+#endif
+
 #ifdef DOSTATS
     STATS->inc( err_msg );
     STATS->addto( "OsrmClient::getOsrmViaRoute (does the work) Cumulative time",
@@ -453,6 +484,12 @@ bool OsrmClient::getOsrmViaroute()
   STATS->addto( "OsrmClient::getOsrmViaRoute (does the work) Cumulative time",
                 timer.duration() );
 #endif
+
+#ifdef DOVRPLOG
+  DLOG(INFO) << "ending OsrmClient::getOsrmViaroute() with status: " << status;
+  DLOG(INFO) << httpContent;
+#endif
+
   return true;
 }
 

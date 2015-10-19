@@ -1002,7 +1002,7 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   std::vector< double > bearings;
 
   // Add nodes and bearings to data containers
-  for (unsigned int i = 0; i < nodesOnPath.size(); ++i) {
+  for (unsigned int i = 0; i < nodesOnPath.size(); i++) {
     double bearing;
     if ( getBearingForNId(nodesOnPath[i].nid(), bearing) ) {
       bearings.push_back(bearing);
@@ -1019,9 +1019,9 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
   // Add point to the call
   osrmi->addViaPoints(call, bearings);
   if (!osrmi->getOsrmViaroute()) {
-    #ifdef VRPMINTRACE
-        DLOG(INFO) << "getOsrmViaroute failed";
-    #endif
+#ifdef VRPMINTRACE
+    DLOG(INFO) << "getOsrmViaroute failed";
+#endif
     osrmi->useOsrm(oldStateOsrm);
     return;
   }
@@ -1038,7 +1038,7 @@ void fill_times(const TwBucket<knode> nodesOnPath) const {
     DLOG(INFO) << "\tNID\tID\tBEARING\t";
     for (unsigned int i = 0; i < call.size(); ++i) {
       DLOG(INFO) << "\t" << call[i].nid() << "\t" << call[i].id() << "\t" << bearings[i] << "\t";
-      ss << "loc=" << call[i].y() << "," << call[i].x() << "&b=" << static_cast<int>(bearings[i]) << "&";
+      ss << "loc=" << call[i].y() << "," << call[i].x() << "&b=" << static_cast<int>(bearings[i] + 0.5) << "&";
     }
     std::string s = ss.str();
     DLOG(INFO) << s.substr(0, s.size()-1);
@@ -3419,7 +3419,14 @@ private:
       osrmi->clear();
 
       for ( j = from; j < to ; j++ ) {
-          osrmi->addViaPoint(original[j]);
+        double bearing;
+        if ( getBearingForNId(original[j].nid(), bearing) ) {
+          osrmi->addViaPoint(original[j], bearing);
+        } else {
+    #ifdef VRPMINTRACE
+          DLOG(INFO) << "Error: Node " << original[j].nid() << "(" << original[j].id() << ") have no bearing!";
+    #endif
+        }
       }
 
       if (   osrmi->getOsrmViaroute()
@@ -3454,7 +3461,7 @@ private:
 #endif  // OSRMCLIENT
 
 
- public:
+public:
 
   // Just for log. Dump travel_Time matrix.
   void dump_travel_Time() {
@@ -3492,14 +3499,15 @@ private:
     // datanodes is pickups + otherlocs
     original = datanodes;
 
-    #ifdef VRPMINTRACE
-      original.dump("Data now loaded in original!");
-    #endif
+#ifdef VRPMINTRACE
+    original.dump("Data now loaded in original!");
+#endif
 
-    // Why?
-    #ifdef OSRMCLIENT
-        getAllHintsAndStreets();
-    #endif
+// If OSRM, need phantom nodes!
+#ifdef OSRMCLIENT
+    setPhantomNodes();
+    getAllHintsAndStreets();
+#endif
 
     // Initialize travel_Time
     prepareTravelTime();
@@ -3536,10 +3544,6 @@ private:
     assert(original == datanodes);
     assert(check_integrity());
 
-    // If OSRM, need phantom nodes!
-    #ifdef OSRMCLIENT
-        setPhantomNodes();
-    #endif
   }
 
 
@@ -3579,9 +3583,7 @@ private:
     std::string line;
 
 #ifdef OSRMCLIENT
-#ifdef VRPMINTRACE
-    DLOG(INFO) << "going to GET HINTS\n";
-#endif
+    setPhantomNodes();
     getAllHintsAndStreets();
 #endif
 
@@ -3624,9 +3626,6 @@ private:
     assert(original == datanodes);
     assert(check_integrity());
 
-    #ifdef OSRMCLIENT
-        setPhantomNodes();
-    #endif
 
   }
 

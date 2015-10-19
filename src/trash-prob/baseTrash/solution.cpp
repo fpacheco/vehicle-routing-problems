@@ -174,10 +174,10 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
 
     if ( twc->getBearingForNId(fleet[i].getStartingSite().nid(), bearing) ) {
         ss << std::fixed << "loc=" << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x()
-           << "&b=" << static_cast<int>(bearing);
+           << "&b=" << static_cast<int>(bearing + 0.5);
         //
         ssll << std::fixed << fleet[i].getStartingSite().y() << "," << fleet[i].getStartingSite().x()
-             << "," << static_cast<int>(bearing) << std::endl;
+             << "," << static_cast<int>(bearing + 0.5) << std::endl;
     } else {
 #ifdef VRPMINTRACE
       DLOG(INFO) << "Error: Node " << fleet[i].getStartingSite().nid() << "(" << fleet[i].getStartingSite().id() << ") have no bearing!";
@@ -188,10 +188,10 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
 
         if ( twc->getBearingForNId(fleet[i][j].nid(), bearing) ) {
           ss << std::fixed << "&loc=" << fleet[i][j].y() << "," << fleet[i][j].x()
-                  << "&b=" << static_cast<int>(bearing);
+                  << "&b=" << static_cast<int>(bearing + 0.5);
           //
           ssll << std::fixed << fleet[i][j].y() << "," << fleet[i][j].x()
-               << "," << static_cast<int>(bearing) << std::endl;
+               << "," << static_cast<int>(bearing + 0.5) << std::endl;
         } else {
     #ifdef VRPMINTRACE
           DLOG(INFO) << "Error: Node " << fleet[i][j].nid() << "(" << fleet[i][j].id() << ") have no bearing!";
@@ -201,10 +201,10 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
 
     if ( twc->getBearingForNId(fleet[i].getDumpSite().nid(), bearing) ) {
         ss << "&loc=" << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x()
-              << "&b=" << static_cast<int>(bearing);
+              << "&b=" << static_cast<int>(bearing + 0.5);
         //
         ssll << std::fixed << fleet[i].getDumpSite().y() << "," << fleet[i].getDumpSite().x()
-             << "," << static_cast<int>(bearing) << std::endl;
+             << "," << static_cast<int>(bearing + 0.5) << std::endl;
     } else {
 #ifdef VRPMINTRACE
       DLOG(INFO) << "Error: Node " << fleet[i].getDumpSite().nid() << "(" << fleet[i].getDumpSite().id() << ") have no bearing!";
@@ -213,10 +213,10 @@ std::vector<std::string> Solution::getOSRMUrl (std::string urlBase) const
 
     if ( twc->getBearingForNId(fleet[i].getEndingSite().nid(), bearing) ) {
         ss << std::fixed << "&loc=" << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x()
-           << "&b=" << static_cast<int>(bearing);
+           << "&b=" << static_cast<int>(bearing + 0.5);
         //
         ssll << std::fixed << fleet[i].getEndingSite().y() << "," << fleet[i].getEndingSite().x()
-             << "," << static_cast<int>(bearing) << std::endl;
+             << "," << static_cast<int>(bearing + 0.5) << std::endl;
     } else {
 #ifdef VRPMINTRACE
       DLOG(INFO) << "Error: Node " << fleet[i].getEndingSite().nid() << "(" << fleet[i].getEndingSite().id() << ") have no bearing!";

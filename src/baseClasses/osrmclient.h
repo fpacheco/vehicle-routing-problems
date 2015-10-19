@@ -93,6 +93,9 @@ public:
   void addViaPoint( double lat, double lon );
   void addViaPoint( double lat, double lon, double bearing );
   void addViaPoint( const Twnode &node );
+  void addViaPoint( const Twnode &node, double bearing ) {
+    addViaPoint( node.y(), node.x(), bearing );
+  }
   void addViaPoints( const std::deque<Twnode> &path );
   void addViaPoints(const std::vector<Twnode> &path, const std::vector<double> &bearings);
 
