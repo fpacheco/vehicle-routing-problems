@@ -2,11 +2,10 @@
 #define GDALI_H
 
 #include <string>
-// OGR headers
-#include "gdal.h"
+#include <vector>
 #include "ogrsf_frmts.h"
 
-/*
+
 class GdalI {
 
 public:
@@ -14,17 +13,29 @@ public:
      GDALAllRegister();
   }
   // ~GdalI() { }
-  bool openOGRDataSource(std::string filePath);
-  void closeOGRDataSource();
+  bool openVectorDatasource(std::string filePath);
+  void closeVectorDatasource();
+  bool hasDContainersFields();
+  bool hasDOtherlocsFields();
+  bool hasDVehiclesFields();
+  bool hasDTimeMatrixFields();
+
 
 private:
-  // OGS datasource
-  GDALDataset *mOpenDataset;
-  // OGR file to read
-  std::string mFilePath;
   // GDAL datasource
-  // GDALDataset *mPoDataset;
+  GDALDataset *mReadDataset;
+  // OGR file to read
+  std::string mReadFilePath;
+  // Layer
+  OGRLayer *mReadOGRLayer;
+
+  // GDAL datasource
+  GDALDataset *mWriteDataset;
+  // OGR file to read
+  std::string mWriteFilePath;
+  // Layer
+  OGRLayer *mWriteOGRLayer;
+
 };
-*/
 
 #endif
