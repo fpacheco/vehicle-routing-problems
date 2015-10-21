@@ -46,6 +46,8 @@ namespace fs = boost::filesystem;
 class VRPTools {
 
 public:
+  typedef std::vector< vrp_output_t > vehiclePath;
+
     VRPTools();
     /**
      * @brief A member to set containers
@@ -148,6 +150,7 @@ private:
     fs::path mLogDir;
     ///< Logging file name (not path)
     fs::path mLogFile;
+    std::map<int,vehiclePath> mVehiclesPaths;
 };
 
 #endif

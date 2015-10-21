@@ -15,6 +15,7 @@ public:
   // ~GdalI() { }
   bool openVectorDatasource(std::string filePath);
   void closeVectorDatasource();
+  void writeSeqOutput();
   bool hasDContainersFields();
   bool hasDOtherlocsFields();
   bool hasDVehiclesFields();
