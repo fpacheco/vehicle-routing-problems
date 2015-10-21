@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "gdal_priv.h"
 #include "ogrsf_frmts.h"
 
 

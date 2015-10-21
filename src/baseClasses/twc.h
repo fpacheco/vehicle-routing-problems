@@ -262,7 +262,8 @@ private:
             UID nid = original[i].nid();
             auto it = mPhantomNodes.find( nid );
             if ( it!=mPhantomNodes.end() ) {
-                DLOG(INFO) << std::setprecision(8) << "\t" << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
+                DLOG(INFO) << std::fixed << std::setprecision(6) << "\t"
+                           << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
                            << it->second.id() << "\t" << it->second.point().x() << "\t" << it->second.point().y() << "\t"
                            << it->second.bearing() << "\t";
             }

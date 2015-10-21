@@ -312,7 +312,7 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     dlon = std::abs(mOtherLocs[i].x-phaNLon);
     dlat = std::abs(mOtherLocs[i].y-phaNLat);
     //if (fw_wt == 0 || rv_wt == 0) {
-    if ( dlon<0.0000009 && dlat<0.0000009) {
+    if ( dlon<0.000001 || dlat<0.000001) {
       errorBearing = true;
       ss << mContainers[i].id << "\t"
         << mContainers[i].x << "\t"
@@ -332,23 +332,6 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
       bearing-=360;
     }
 
-    /*
-    // Get nearest fisical OSRM node (edge intersection) of phantom
-    osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
-    // Bearing calculation
-    Node contNode = Node(mContainers[i].x, mContainers[i].y);
-    Node phyNode = Node(phyNLon,phyNLat);
-    Node phaNode = Node(phaNLon,phaNLat);
-    // Is right
-    bool ret = contNode.isRightToSegment(phyNode, phaNode);
-    double bearing;
-    if (ret) {
-      bearing = phyNode.bearing(phaNode, false);
-    } else {
-      bearing = phyNode.bearing(phaNode, true);
-    }
-    */
-
     Twnode twNode = Twnode(nid, mContainers[i].id, mContainers[i].x, mContainers[i].y);
     nodes.push_back(twNode);
     bearings[nid] = bearing;
@@ -366,7 +349,7 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     dlon = std::abs(mOtherLocs[i].x-phaNLon);
     dlat = std::abs(mOtherLocs[i].y-phaNLat);
     //if (fw_wt == 0 || rv_wt == 0) {
-    if ( dlon<0.000001 && dlat<0.000001) {
+    if ( dlon<0.000001 || dlat<0.000001) {
       errorBearing = true;
       ss << mOtherLocs[i].id << "\t"
         << mOtherLocs[i].x << "\t"
@@ -385,23 +368,6 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     if (bearing>=360) {
       bearing-=360;
     }
-
-    /*
-    // Get nearest fisical OSRM node (edge intersection) of phantom
-    osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
-    // Bearing calculation
-    Node contNode = Node(mOtherLocs[i].x, mOtherLocs[i].y);
-    Node phyNode = Node(phyNLon,phyNLat);
-    Node phaNode = Node(phaNLon,phaNLat);
-    // Is right
-    bool ret = contNode.isRightToSegment(phyNode, phaNode);
-    double bearing;
-    if (ret) {
-      bearing = phyNode.bearing(phaNode, false);
-    } else {
-      bearing = phyNode.bearing(phaNode, true);
-    }
-    */
 
     Twnode twNode = Twnode(nid,mOtherLocs[i].id, mOtherLocs[i].x, mOtherLocs[i].y);
     nodes.push_back(twNode);
