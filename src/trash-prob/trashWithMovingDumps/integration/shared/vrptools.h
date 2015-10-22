@@ -94,8 +94,8 @@ public:
     void setUseOsrm(bool opt);
     bool getUseOsrm() { return mUseOsrm; }
     // Levante por la derecha
-    void setNIters(bool opt) { mNIters = opt; }
-    bool getNIters() { return mNIters; }
+    void setNIters(unsigned int iters) { mNIters = iters; }
+    unsigned int getNIters() { return mNIters; }
     // Test if OSRM datastore is alive
     bool checkOsrmClient();
     // Read all data from file

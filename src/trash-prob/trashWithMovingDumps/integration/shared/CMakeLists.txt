@@ -260,7 +260,7 @@ set (VRPTOOLS_SOURCES
 )
 
 if(WITH_GDAL)
-  append(VRPTOOLS_SOURCES gdali.cpp)
+  SET(VRPTOOLS_SOURCES ${VRPTOOLS_SOURCES} gdali.cpp)
 endif()
 
 # Append the header files here. this will get copied to include directory
@@ -270,7 +270,7 @@ set (VRPTOOLS_INCLUDE_FILES
 )
 
 if(WITH_GDAL)
-  append(VRPTOOLS_INCLUDE_FILES gdali.h)
+  SET(VRPTOOLS_INCLUDE_FILES ${VRPTOOLS_INCLUDE_FILES} gdali.h)
 endif()
 
 #add_library(baseclasses OBJECT ${BASECLASSES_SOURCES} ${BASECLASSES_INCLUDE_FILES} )

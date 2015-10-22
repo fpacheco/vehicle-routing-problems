@@ -308,6 +308,27 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     osrmi->getOsrmNearest( mContainers[i].x, mContainers[i].y, phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
     // If forward_weight or reverse_weight phantom node is on physical node
     // if ( (one_way != 1) && (fw_wt == 0 || rv_wt == 0) ) {
+
+    // Nodes
+    Node contNode = Node(mContainers[i].x, mContainers[i].y);
+    Node phaNode = Node(phaNLon,phaNLat);
+    double distance = contNode.haversineDistance(phaNode);
+
+    double dlon, dlat;
+    dlon = std::abs(mContainers[i].x-phaNLon);
+    dlat = std::abs(mContainers[i].y-phaNLat);
+
+    DLOG(INFO) << mContainers[i].id << "\t" << distance;
+
+    if ( (dlon<0.000001 || dlat<0.000001) && (distance < 5) ) {
+      errorBearing = true;
+      ss << mContainers[i].id << "\t"
+        << mContainers[i].x << "\t"
+        << mContainers[i].y << std::endl;
+      continue;
+    }
+
+    /*
     double dlon, dlat;
     dlon = std::abs(mOtherLocs[i].x-phaNLon);
     dlat = std::abs(mOtherLocs[i].y-phaNLat);
@@ -319,13 +340,11 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
         << mContainers[i].y << std::endl;
       continue;
     }
+    */
 
     //bearing FROM container TO phantomnode
     double compBearing;
     double bearing;
-    // Bearing calculation
-    Node contNode = Node(mContainers[i].x, mContainers[i].y);
-    Node phaNode = Node(phaNLon,phaNLat);
     compBearing = contNode.bearing(phaNode, false);
     bearing = compBearing + 90;
     if (bearing>=360) {
@@ -345,11 +364,18 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
     osrmi->getOsrmNearest( mOtherLocs[i].x, mOtherLocs[i].y, phaNLon, phaNLat, one_way, fw_id, rv_id, fw_wt, rv_wt, street_id);
     // If forward_weight or reverse_weight phantom node is on physical node
     // if ( (one_way != 1) && (fw_wt == 0 || rv_wt == 0) ) {
+
+    Node contNode = Node(mOtherLocs[i].x, mOtherLocs[i].y);
+    Node phaNode = Node(phaNLon,phaNLat);
+    double distance = contNode.haversineDistance(phaNode);
+
+    DLOG(INFO) << mOtherLocs[i].id << "\t" << distance;
+
     double dlon, dlat;
     dlon = std::abs(mOtherLocs[i].x-phaNLon);
     dlat = std::abs(mOtherLocs[i].y-phaNLat);
-    //if (fw_wt == 0 || rv_wt == 0) {
-    if ( dlon<0.000001 || dlat<0.000001) {
+
+    if ( (dlon<0.000001 || dlat<0.000001) && (distance < 5) ) {
       errorBearing = true;
       ss << mOtherLocs[i].id << "\t"
         << mOtherLocs[i].x << "\t"
@@ -357,12 +383,26 @@ bool VRPTools::createTimeMatrix(const std::string &fileBasePath, std::string &da
       continue;
     }
 
+    /*
+    double dlon, dlat;
+    dlon = std::abs(mOtherLocs[i].x-phaNLon);
+    dlat = std::abs(mOtherLocs[i].y-phaNLat);
+    //if (fw_wt == 0 || rv_wt == 0) {
+    if ( dlon<0.000001 && dlat<0.000001) {
+      errorBearing = true;
+      ss << mOtherLocs[i].id << "\t"
+        << mOtherLocs[i].x << "\t"
+        << mOtherLocs[i].y << std::endl;
+      continue;
+    }
+    */
+
     //bearing FROM container TO phantomnode
     double compBearing;
     double bearing;
     // Bearing calculation
-    Node contNode = Node(mOtherLocs[i].x, mOtherLocs[i].y);
-    Node phaNode = Node(phaNLon,phaNLat);
+    // Node contNode = Node(mOtherLocs[i].x, mOtherLocs[i].y);
+    // Node phaNode = Node(phaNLon,phaNLat);
     compBearing = contNode.bearing(phaNode, false);
     bearing = compBearing + 90;
     if (bearing>=360) {

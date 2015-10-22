@@ -22,7 +22,7 @@ void Optimizer::optimizefleet(int iter) {
 }
 
 
-  
+
 void Fleetopt::insert(const std::deque <Vehicle> &p_fleet) {
   fleet = p_fleet;
 }
@@ -46,7 +46,12 @@ void Fleetopt::optimize(int iter) {
   auto count = 0;
   auto tot_count = 0;
 
+  DLOG(INFO) << "iter: " << iter;
+
   for (UINT i = 0; i < iter; ++i) {
+    DLOG(INFO) << "********************************";
+    DLOG(INFO) << i << "/" << iter;
+    DLOG(INFO) << "********************************";
     count = exchangesWorse(10);
     for (auto &trip : trips) {
       count = 0;
