@@ -22,7 +22,6 @@ using namespace boost::program_options;
 std::string base;
 std::vector<std::string> dataFiles;
 
-
 // tools/trashc --base ../tests/InputFiles/ rivera
 
 void to_cout(const std::vector<std::string> &v)
@@ -84,11 +83,15 @@ void calculateTimeMatrix(const std::string &baseDir, const std::vector<std::stri
 
 }
 
-void solve( const std::string &baseDir, const std::vector<std::string> &files )
+void solve( const std::string &baseDir, const std::vector<std::string> &files, int iters )
 {
 
   if (files.size()<=0) {
     return;
+  }
+
+  if ( iters<1 || iters>1000 ) {
+    iters = 100;
   }
 
   if ( boost::filesystem::exists(baseDir) && boost::filesystem::is_directory(baseDir))
@@ -97,6 +100,7 @@ void solve( const std::string &baseDir, const std::vector<std::string> &files )
       // std::cout << baseDir << element << std::endl;
       VRPTools vrp;
       vrp.readDataFromFiles(baseDir + element);
+      vrp.setNIters(iters);
       vrp.solve();
     }
   } else {
@@ -116,6 +120,7 @@ int main(int argc, char **argv)
         ("checkOSRM", "Check OSRM")
         ("checkData", "Check the data. Don't process anything.")
         ("calculateTM", "Calculate OSRM time matrix")
+        ("iters", value<int>(), "Number of iterations")
         ("base", value<std::string>(), "Base directory")
         ("files", value<std::vector<std::string>>()->multitoken()->zero_tokens()->composing(), "File begin without endings");
 
@@ -152,7 +157,11 @@ int main(int argc, char **argv)
       } else if ( vm.count("calculateTM") ) {
         calculateTimeMatrix( base, vm["files"].as<std::vector<std::string>>() );
       } else {
-        solve( base, vm["files"].as<std::vector<std::string>>() );
+        int iters;
+        if (vm.count("iters")) {
+          iters = vm["iters"].as<int>();
+        }
+        solve( base, vm["files"].as<std::vector<std::string>>(), iters );
       }
     }
   } catch (const error &ex) {

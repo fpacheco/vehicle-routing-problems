@@ -1317,11 +1317,12 @@ bool OsrmClient::getTimes( rapidjson::Document &jsondoc, std::deque<double> &tim
 {
 #ifdef DOVRPLOG
     DLOG(INFO) << "starting OsrmClient::getTimes( rapidjson::Document &jsondoc, std::deque<double> &times )";
-
+    /*
     rapidjson::StringBuffer buffer;
     rapidjson::Writer< rapidjson::StringBuffer > writer(buffer);
     jsondoc.Accept(writer);
     DLOG(INFO) << buffer.GetString();
+    */
 #endif
 
   if ( not connectionAvailable ) return false;

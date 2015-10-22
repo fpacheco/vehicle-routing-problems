@@ -145,13 +145,6 @@ private:
   };
 
 public:
-  // PhantomNode type node before and after definition
-  typedef enum {
-    pnBefore = -1,    ///< Before point in PhantomNode
-    pnAfter = 1,      ///< After point in PhantomNode
-  } PhantomNodeType;
-
-public:
   /**
    * @brief Get bearing for nid.
    *
@@ -162,28 +155,6 @@ public:
     auto it = mPhantomNodes.find( nid );
     if ( it!=mPhantomNodes.end() ) {
       bearing = it->second.bearing();
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * @brief Get after or before Twnode for a pickup that has PhantomNode
-   *
-   * This information is relevant in right side pickup trucks/containers
-   *
-   */
-  bool getTWPhantomNodeForNId(UID nid, PhantomNodeType type, Twnode &twn) const {
-    auto it = mPhantomNodes.find( nid );
-    if ( it!=mPhantomNodes.end() ) {
-      if ( type == pnBefore) {
-        twn = Twnode( mIPNId, mPNId, it->second.beforePNode().x(), it->second.beforePNode().y() );
-      } else if ( type == pnAfter) {
-        twn = Twnode( mIPNId, mPNId, it->second.afterPNode().x(), it->second.afterPNode().y() );
-      } else {
-        return false;
-      }
-      twn.set_type( Twnode::kPhantomNode );
       return true;
     }
     return false;
@@ -208,9 +179,6 @@ private:
    *
    */
   void setPhantomNodes() {
-    // Multiplier for before and after
-    double mb = 0.70;
-    double ma = 1.30;
     // Delete previous
     mPhantomNodes.clear();
     #ifdef VRPMINTRACE
@@ -258,34 +226,6 @@ private:
 
       PhantomNode pn = PhantomNode(pncount, phaNLon, phaNLat, fw_id, rv_id, fw_wt, rv_wt, street_id);
 
-      /*
-      bool ret = original[i].isRightToSegment(phyNode, phaNode);
-      double bearing;
-      if (ret) {
-        bearing = phyNode.bearing(phaNode, false);
-      } else {
-        bearing = phyNode.bearing(phaNode, true);
-      }
-
-
-      // Get nearest fisical OSRM node (edge intersection) of phantom
-      osrmi->getOsrmLocate(phaNLon, phaNLat, phyNLon, phyNLat);
-
-      // Set phantom node
-      PhantomNode pn = PhantomNode(pncount, phaNLon, phaNLat, fw_id, rv_id, fw_wt, rv_wt, street_id);
-
-      // Bearing calculation
-      Node phyNode = Node(phyNLon,phyNLat);
-      Node phaNode = Node(phaNLon,phaNLat);
-      bool ret = original[i].isRightToSegment(phyNode, phaNode);
-      double bearing;
-      if (ret) {
-        bearing = phyNode.bearing(phaNode, false);
-      } else {
-        bearing = phyNode.bearing(phaNode, true);
-      }
-      */
-
       // Set pn bearing
       pn.setBearing(bearing);
 
@@ -299,51 +239,6 @@ private:
 #ifdef VRPMINTRACE
         DLOG(INFO) << original[i].id() << " [lon,lat] " << original[i].x() << original[i].y() << " is in two way street! " << bearing;
 #endif
-        // Add before and after to pn
-        double alon, alat, blon, blat;
-        // WARNING: longitude and latitude!!!!!!
-        // Only valid for very short distances
-        //
-        // I think
-        //
-        // FN---------PN
-        //            |
-        //         original[i]
-        //
-        // Before
-        blon = phyNLon + mb * (phaNLon - phyNLon);
-        blat = phyNLat + mb * (phaNLat - phyNLat);
-        // After
-        alon = phyNLon + ma * (phaNLon - phyNLon);
-        alat = phyNLat + ma * (phaNLat - phyNLat);
-
-        /*
-                #ifdef VRPMINTRACE
-                    std::cout << std::setprecision(8) << "PN: (" << pnlon << "," << pnlat << ")" << std::endl;
-                    std::cout << "FN: (" << phyNLon << "," << phyNLat << ")" << std::endl;
-                    std::cout << "Before: (" << blon << "," << blat << ")" << std::endl;
-                    std::cout << "After: (" << alon << "," << alat << ")" << std::endl;
-                #endif
-        */
-
-        Point pb, pa;
-        if (ret) {
-          pb = Point(blon,blat);
-          pa = Point(alon,alat);
-          pn.setBeforePNode( pb );
-          pn.setAfterPNode( pa );
-        } else {
-          // Not as you think!!!
-          //
-          //         original[i]
-          //            |
-          // FN---------PN
-          //
-          pb = Point(alon,alat);
-          pa = Point(blon,blat);
-          pn.setBeforePNode( pb );
-          pn.setAfterPNode( pa );
-        }
       }
 #endif //0
 
@@ -356,22 +251,21 @@ private:
       mPhantomNodes[ original[i].nid() ] = pn;
       pncount++;
       //} // if pickup
-    }
+    } // for
     osrmi->useOsrm(oldStateOsrm);
 
     #ifdef VRPMINTRACE
         DLOG(INFO) << "Begin PhantomNodes for pickups sites";
         DLOG(INFO) << "\t" << "CONID" << "\t" << "COID" << "\t" << "COLON" << "\t" << "COLAT" << "\t" << "PNID" << "\t" << "PNLON" << "\t" << "PNLAT" << "\t"
-                   << "BEARING" << "\t" << "BELON" << "\t" << "BELAT" << "\t" << "AFLON" << "\t" << "AFLAT";
+                   << "BEARING" << "\t";
         for (UINT i = 0; i < original.size(); i++) {
             UID nid = original[i].nid();
             auto it = mPhantomNodes.find( nid );
             if ( it!=mPhantomNodes.end() ) {
-                DLOG(INFO) << std::setprecision(8) << "\t" << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
+                DLOG(INFO) << std::fixed << std::setprecision(6) << "\t"
+                           << original[i].nid() << "\t" << original[i].id() << "\t" << original[i].x() << "\t"  << original[i].y() << "\t"
                            << it->second.id() << "\t" << it->second.point().x() << "\t" << it->second.point().y() << "\t"
-                           << it->second.bearing() << "\t"
-                           << it->second.beforePNode().x() << "\t" << it->second.beforePNode().y() << "\t"
-                           << it->second.afterPNode().x() << "\t" << it->second.afterPNode().y();
+                           << it->second.bearing() << "\t";
             }
         }
         DLOG(INFO) << "End PhantomNodes for pickups sites";

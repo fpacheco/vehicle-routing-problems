@@ -49,9 +49,9 @@ inline std::ostream &operator<<(std::ostream &out, const Point &p)
 class PhantomNode
 {
 public:
-    PhantomNode(): mBearing(-1.0), mStreetName( std::string() ), mPoint( Point(0,0) ), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
+    PhantomNode(): mBearing(-1.0), mStreetName( std::string() ), mPoint( Point(0,0) )
     {}
-    PhantomNode( UID phantomNodeId ): mBearing(-1.0), mStreetName( std::string() ), mPoint( Point(0,0) ), mBeforePNode( Point(0,0) ), mAfterPNode( Point(0,0) ), mNetworkNNode(0,0)
+    PhantomNode( UID phantomNodeId ): mBearing(-1.0), mStreetName( std::string() ), mPoint( Point(0,0) )
     { mPhantomNodeId = phantomNodeId; }
     PhantomNode( UID phantomNodeId, double x, double y, UID fwNodeId, UID rvNodeId, UID fwWeight, UID rvWeight, UID nameId );
     PhantomNode( const PhantomNode &other );
@@ -84,23 +84,8 @@ public:
     void setNameId(UID nameId) { mNameId = nameId; }
     UID nameId () const { return mNameId; }
 
-    void setBeforePNode (const Point &p) {
-        mBeforePNode = Point( p.x(),p.y() );
-    }
-    Point beforePNode () const { return mBeforePNode; }
-
-    void setAfterPNode (const Point &p) {
-        mAfterPNode = Point( p.x(),p.y() );
-    }
-    Point afterPNode () const { return mAfterPNode; }
-
     void setBearing(double bearing) { mBearing = bearing; }
     double bearing () const { return mBearing; }
-
-    void setNetworkNNode (const Point &p) {
-        mNetworkNNode = Point( p.x(),p.y() );
-    }
-    Point networkNNode () const { return mNetworkNNode; }
 
     bool inSameStreet(const PhantomNode &other);
 
@@ -115,10 +100,7 @@ private:
     UID mReveWeight;        ///< OSRM reverse weight
     std::string mStreetName; ///< OSRM street name
     UID mNameId;            ///< OSRM street name id
-    Point mBeforePNode;     ///< Longitude and latitude of point before phantom node
-    Point mAfterPNode;      ///< Longitude and latitude of point after phantom node
     double mBearing;        ///< Aproximate bearing of the container asocciated with this phantom node
-    Point mNetworkNNode;    ///< Longitude and latitude of the nearest physical node in the network
 };
 
 inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
@@ -131,10 +113,7 @@ inline std::ostream &operator<<(std::ostream &out, const PhantomNode &pn)
         << "Reverse weight: " << pn.reveWeight() << ", "
         << "Bearing: " << pn.bearing() << ", "
         // << "Name: " << pn.streetName() << ", "
-        << "Name Id: " << pn.nameId() << ", "
-        << "Neares physical point: " << pn.networkNNode() << ", "
-        << "Before PN: " << pn.beforePNode() << ", "
-        << "After PN: " << pn.afterPNode();
+        << "Name Id: " << pn.nameId();
     return out;
 }
 

@@ -25,7 +25,7 @@ set(VRPTOOLS_VERSION_STRING ${VRPTOOLS_VERSION_MAJOR}.${VRPTOOLS_VERSION_MINOR}.
 
 # Always
 option(OSRMCLIENT "Option description" ON)
-option(WITH_GDAL "Option description" ON)
+option(WITH_GDAL "Option description" OFF)
 
 # Develop version
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -156,7 +156,7 @@ include_directories(${CURLPP_INCLUDE_DIRS})
 include_directories(${RAPIDJSON_INCLUDE_DIRS})
 include_directories(${TBB_INCLUDE_DIR})
 if (WITH_GDAL)
-  include_directories(${GDAL_INCLUDE_DIR}) 
+  include_directories(${GDAL_INCLUDE_DIR})
   MESSAGE(STATUS "Gdal Include dir:" ${GDAL_INCLUDE_DIR})
 endif()
 ###
@@ -256,16 +256,22 @@ set (SOLVERTRASH_INCLUDE_FILES
 # Append the source files here
 set (VRPTOOLS_SOURCES
   loadfromfiles.cpp
-  gdali.cpp
   vrptools.cpp
 )
+
+if(WITH_GDAL)
+  SET(VRPTOOLS_SOURCES ${VRPTOOLS_SOURCES} gdali.cpp)
+endif()
 
 # Append the header files here. this will get copied to include directory
 set (VRPTOOLS_INCLUDE_FILES
   loadfromfiles.h
-  gdali.h
   vrptools.h
 )
+
+if(WITH_GDAL)
+  SET(VRPTOOLS_INCLUDE_FILES ${VRPTOOLS_INCLUDE_FILES} gdali.h)
+endif()
 
 #add_library(baseclasses OBJECT ${BASECLASSES_SOURCES} ${BASECLASSES_INCLUDE_FILES} )
 #add_library(basetrash OBJECT ${BASETRASH_SOURCES} ${BASETRASH_INCLUDE_FILES} )

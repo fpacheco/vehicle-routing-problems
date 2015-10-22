@@ -247,57 +247,55 @@ void Solution::dumpSolutionForPg () const
     if ( fleet[i].size() <= 1 ) continue;
     int seq = 0;
     std::cout <<
-              "seq" <<
-              "\tVID" <<
-              "\tid" <<
-              "\tntype" <<
-              "\tx" <<
-              "\ty" <<
-              "\tDepart" <<
-              "\tdTime" <<
-              "\tdCargo" << std::endl;
-
-    seq++;
+                 "seq" <<
+                 "\tVID" <<
+                 "\tid" <<
+                 "\tntype" <<
+                 "\tx" <<
+                 "\ty" <<
+                 "\tDepart" <<
+                 "\tdTime" <<
+                 "\tdCargo" << std::endl;
 
     for ( UINT j = 0; j < fleet[i].size(); ++j ) {
       seq++;
 
       std::cout <<
-                     seq <<
-                    "\t" << fleet[i].getVid() <<
-                    "\t" << fleet[i][j].id() <<
-                    "\t" << fleet[i][j].type() <<
-                    "\t" << fleet[i][j].x() <<
-                    "\t" << fleet[i][j].y() <<
-                    "\t" << fleet[i][j].departureTime() <<
-                    "\t" << fleet[i][j].deltaTime() <<
-                    "\t" << fleet[i][j].demand() << std::endl;
+                   seq <<
+                   "\t" << fleet[i].getVid() <<
+                   "\t" << fleet[i][j].id() <<
+                   "\t" << fleet[i][j].type() <<
+                   "\t" << fleet[i][j].x() <<
+                   "\t" << fleet[i][j].y() <<
+                   "\t" << fleet[i][j].departureTime() <<
+                   "\t" << fleet[i][j].deltaTime() <<
+                   "\t" << fleet[i][j].demand() << std::endl;
     }
 
     seq++;
 
     std::cout <<
-              seq  <<
-              "\t" << fleet[i].getVid() <<
-              "\t" << fleet[i].getDumpSite().id() <<
-              "\t" << fleet[i].getDumpSite().type() <<
-              "\t" << fleet[i].getDumpSite().x() <<
-              "\t" << fleet[i].getDumpSite().y() <<
-              "\t" << fleet[i].getDumpSite().departureTime() <<
-              "\t" <<  fleet[i].getDumpSite().deltaTime() <<
-              "\t" << fleet[i].getDumpSite().demand() << std::endl;
+                 seq  <<
+                 "\t" << fleet[i].getVid() <<
+                 "\t" << fleet[i].getDumpSite().id() <<
+                 "\t" << fleet[i].getDumpSite().type() <<
+                 "\t" << fleet[i].getDumpSite().x() <<
+                 "\t" << fleet[i].getDumpSite().y() <<
+                 "\t" << fleet[i].getDumpSite().departureTime() <<
+                 "\t" <<  fleet[i].getDumpSite().deltaTime() <<
+                 "\t" << fleet[i].getDumpSite().demand() << std::endl;
     seq++;
 
     std::cout <<
-              seq  <<
-              "\t" << fleet[i].getVid() <<
-              "\t" << fleet[i].getEndingSite().id() <<
-              "\t" << fleet[i].getEndingSite().type() <<
-              "\t" << fleet[i].getEndingSite().x() <<
-              "\t" << fleet[i].getEndingSite().y() <<
-              "\t" << fleet[i].getEndingSite().departureTime() <<
-              "\t" <<  fleet[i].getEndingSite().deltaTime() <<
-              "\t" << fleet[i].getEndingSite().demand() << std::endl;
+                 seq  <<
+                 "\t" << fleet[i].getVid() <<
+                 "\t" << fleet[i].getEndingSite().id() <<
+                 "\t" << fleet[i].getEndingSite().type() <<
+                 "\t" << fleet[i].getEndingSite().x() <<
+                 "\t" << fleet[i].getEndingSite().y() <<
+                 "\t" << fleet[i].getEndingSite().departureTime() <<
+                 "\t" <<  fleet[i].getEndingSite().deltaTime() <<
+                 "\t" << fleet[i].getEndingSite().demand() << std::endl;
 
 
   }

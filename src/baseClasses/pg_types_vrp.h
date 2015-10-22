@@ -76,4 +76,16 @@ typedef struct vehicle_path_ {
   double cargo;
 } vehicle_path_t;
 
+typedef struct vrp_output_ {
+  int seq;
+  int vid;
+  int nid;
+  double x;
+  double y;
+  double bearing;
+  int ntype;
+  double deltatime;
+  double cargo;
+} vrp_output_t;
+
 #endif
