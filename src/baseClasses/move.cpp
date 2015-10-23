@@ -22,6 +22,7 @@
 #include "stats.h"
 #endif
 
+#include "vrp_assert.h"
 #include "move.h"
 
 /*!

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <map>
 #include <math.h>
 #include <stdio.h>
 #include <string>
